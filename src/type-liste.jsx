@@ -12,7 +12,7 @@ import { Search, PlayCircle, Star, X } from "lucide-react";
 import { visuelProduit } from "./visuels.js";
 import {
   BOUTIQUE, FAMILLES, TOUS_PRODUITS, EST_VIDEOS, SECOURS, GALERIE, AJUSTEMENT,
-  STYLE_PHOTO, Vedettes, RemonterEnHaut, Photo, Prix, Etiquette, VOILE, CARTE, COLONNE, DEGRADE,
+  STYLE_PHOTO, Vedettes, RemonterEnHaut, ToutesLesFamilles, Photo, Prix, Etiquette, VOILE, CARTE, COLONNE, DEGRADE,
   TITRE, CORPS, euros, fond, fondCarte, bordure, texte, texteDoux, rose, violet,
   vert, jaune, cyan,
 } from "./commun.jsx";
@@ -79,11 +79,19 @@ export function EcranListe({ onProduit, onFamille }) {
         </div>
       </div>
 
+      {/* La rangée de pastilles défile de côté : passé la troisième famille, le
+          client ne sait pas que les autres existent. Ce bouton ouvre la liste
+          entière, avec le compte de chacune — et « Tout voir » y figure en tête,
+          donc rien n'est perdu de ce que faisait l'ancienne pastille. */}
+      <ToutesLesFamilles
+        familles={FAMILLES}
+        actif={filtre}
+        total={TOUS_PRODUITS.length}
+        onTout={() => setFiltre("tous")}
+        onFamille={(f) => (EST_VIDEOS(f) ? onFamille(f) : setFiltre(f.id))}
+      />
+
       <div className="flex gap-2 overflow-x-auto px-3 mt-3 pb-1" style={{ scrollbarWidth: "none" }}>
-        {/* Le retour a l'ensemble doit se lire comme une action, pas comme une
-            categorie de plus : c'est le bouton qu'on cherche quand on veut
-            « tout voir ». Il reste en tete, toujours a la meme place. */}
-        {pastille(filtre === "tous", "tous", `TOUT VOIR · ${TOUS_PRODUITS.length}`)}
         {rayons.map((f) => pastille(filtre === f.id, f.id,
           <span>{f.emoji} {f.nom}</span>, f.couleurs[0]))}
         {galeries.map((f) => (

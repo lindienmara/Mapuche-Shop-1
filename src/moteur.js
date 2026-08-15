@@ -10,7 +10,7 @@
 
 export const MOTEUR = {
   modele: "vitrine-3-niveaux",
-  version: "3.12",
+  version: "3.16",
   // Ce que sait faire cette version, pour information.
   capacites: [
     "familles > gammes > produits",
@@ -32,5 +32,10 @@ export const MOTEUR = {
     "trois types de boutique : par familles, en liste, ou La Maison",
     "une famille mene directement a ses articles, avec un bouton pour remonter",
     "des references de produit en double n empechent plus l affichage",
+    "un bouton ouvre la liste complete des familles, rien n est cache hors de l ecran",
+    "moyens de paiement annonces, avec liens vers le prestataire",
+    "le montant du panier est ajoute au lien PayPal et Revolut",
+    "moyens de paiement sur mesure, nom et lien au choix du vendeur",
+    "un moyen de paiement sans compte relie n est jamais propose au client",
   ],
 };

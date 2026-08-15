@@ -247,11 +247,127 @@ export const MESSAGERIE = MESSAGERIES[BOUTIQUE.messagerie] || MESSAGERIES.whatsa
 // écrites avant ce choix.
 export const CONTACT = String(BOUTIQUE.contact || BOUTIQUE.whatsapp || "").trim();
 
+/* ═══════ LES MOYENS DE PAIEMENT ═══════
+   Annoncés avant que le client commande, jamais après : savoir qu'on ne peut
+   payer qu'en espèces se découvre au moment de choisir, pas une fois le message
+   envoyé.
+
+   ★ La boutique ne demande JAMAIS de numéro de carte, et n'en recevra jamais.
+   Elle n'a pas de serveur : un numéro saisi ici ne serait protégé par personne.
+   Les liens ci-dessous ouvrent la page du prestataire — c'est lui qui encaisse,
+   sur sa propre page. */
+const CATALOGUE_PAIEMENTS = {
+  paypal: { nom: "PayPal", emoji: "🅿️" },
+  revolut: { nom: "Revolut", emoji: "🔵" },
+  lydia: { nom: "Lydia", emoji: "🇱" },
+  wero: { nom: "Wero", emoji: "🇪🇺" },
+};
+
+/* Le montant du panier ajouté au lien — uniquement là où le prestataire
+   documente ce format. PayPal et Revolut le font ; Lydia et Wero non. Fabriquer
+   une adresse au jugé enverrait le client sur une page cassée, ce qui est pire
+   que de le laisser saisir la somme lui-même. */
+function avecMontant(id, lien, total) {
+  const base = String(lien || "").replace(/\/+$/, "");
+  const somme = Number(total);
+  if (!base || !(somme > 0)) return base;
+  const m = somme.toFixed(2);
+  if (id === "paypal" && /paypal\.me\//i.test(base)) return `${base}/${m}`;
+  if (id === "revolut" && /revolut\.me\//i.test(base)) return `${base}/eur${m}`;
+  return base;
+}
+
+// Un lien qui n'est pas en https:// n'est pas affiché : le moteur ne fait
+// confiance à rien, pas même à ce qu'il a écrit lui-même.
+const lienSur = (u) => {
+  try {
+    return new URL(String(u || "")).protocol === "https:" ? String(u) : "";
+  } catch (e) {
+    return "";
+  }
+};
+
+/* ★ UN MOYEN SANS COMPTE RELIÉ N'EST JAMAIS PROPOSÉ.
+   Afficher « PayPal » sans lien, c'est promettre au client un paiement qu'il ne
+   pourra pas faire : il clique, rien ne s'ouvre, et il repart. Pire, il peut
+   croire avoir payé.
+
+   La règle est donc sans exception : pas de lien valide, pas de moyen affiché.
+   Un moyen coché dans l'atelier mais laissé sans adresse n'existe pas pour le
+   client — l'atelier le dit en clair de son côté. */
+export const PAIEMENTS = (BOUTIQUE.paiements || [])
+  .filter((p) => p && (CATALOGUE_PAIEMENTS[p.id] || (p.id === "perso" && p.nom)))
+  .map((p) => ({
+    id: p.id,
+    nom: CATALOGUE_PAIEMENTS[p.id] ? CATALOGUE_PAIEMENTS[p.id].nom : p.nom,
+    emoji: CATALOGUE_PAIEMENTS[p.id] ? CATALOGUE_PAIEMENTS[p.id].emoji : (p.emoji || "💳"),
+    lien: lienSur(p.lien),
+    note: p.note || "",
+  }))
+  .filter((p) => !!p.lien);
+
+export function MoyensDePaiement({ total = 0 }) {
+  // Aucun moyen relié : le bloc entier disparaît, note comprise. Une précision
+  // sur un paiement qui n'existe pas n'aurait aucun sens.
+  if (!PAIEMENTS.length) return null;
+  return (
+    <div className="rounded-xl px-3 py-3" style={{ background: VOILE("#131317", "D9"), border: `1px solid ${bordure}` }}>
+      <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: texteDoux, fontFamily: CORPS }}>
+        Paiement accepté
+      </p>
+      <div className="flex flex-col gap-1.5">
+        {PAIEMENTS.map((p) => (
+          p.lien ? (
+            <a
+              key={p.id}
+              href={avecMontant(p.id, p.lien, total)}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-2.5 rounded-lg px-2.5 py-2"
+              style={{ background: CARTE, border: `1px solid ${vert}66`, textDecoration: "none" }}
+            >
+              <span style={{ fontSize: 15 }}>{p.emoji}</span>
+              <span className="flex-1 text-[12.5px] font-bold" style={{ color: texte, fontFamily: CORPS }}>
+                {p.nom}{p.note ? ` — ${p.note}` : ""}
+              </span>
+              <span className="text-[11px]" style={{ color: vert, fontFamily: CORPS }}>
+                {avecMontant(p.id, p.lien, total) !== p.lien ? `payer ${euros(total)} ↗` : "ouvrir ↗"}
+              </span>
+            </a>
+          ) : (
+            <div key={p.id} className="flex items-center gap-2.5 px-2.5 py-1">
+              <span style={{ fontSize: 15 }}>{p.emoji}</span>
+              <span className="text-[12.5px]" style={{ color: texte, fontFamily: CORPS }}>
+                {p.nom}{p.note ? ` — ${p.note}` : ""}
+              </span>
+            </div>
+          )
+        ))}
+      </div>
+      {(BOUTIQUE.paiementNote || "").trim() && (
+        <p className="text-[11px] mt-2" style={{ color: texteDoux, fontFamily: CORPS }}>
+          {BOUTIQUE.paiementNote}
+        </p>
+      )}
+      <p className="text-[10px] mt-2" style={{ color: texteDoux, fontFamily: CORPS }}>
+        Cette boutique ne demande jamais de numéro de carte. Un paiement en ligne se fait
+        sur la page du prestataire, jamais ici.
+      </p>
+    </div>
+  );
+}
+
 export function texteCommande(items) {
   const lignes = items.map(
     (i) => `• ${i.nom} — ${i.unite} (réf. ${i.ref}) x${i.qty} — ${euros(i.prix * i.qty)}`
   );
-  return `${BOUTIQUE.accroche}\n\n${lignes.join("\n")}\n\nTotal : ${euros(cartTotal(items))}`;
+  // Le moyen de paiement voyage avec la commande : le client garde une trace
+  // de ce qui a été annoncé, et toi aussi. Aucun lien n'est recopié ici — un
+  // lien de paiement se clique sur la boutique, pas dans une conversation.
+  const moyens = PAIEMENTS.length
+    ? `\n\nPaiement accepté : ${PAIEMENTS.map((p) => p.nom).join(", ")}`
+    : "";
+  return `${BOUTIQUE.accroche}\n\n${lignes.join("\n")}\n\nTotal : ${euros(cartTotal(items))}${moyens}`;
 }
 
 export function lienCommande(items) {
@@ -393,6 +509,72 @@ export function RemonterEnHaut({ articles = 0, seuil = 12 }) {
     >
       ↑
     </button>
+  );
+}
+
+/* ══════════ TOUTES LES FAMILLES ══════════
+   Une rangée de pastilles qui défile de côté cache ce qui dépasse de l'écran :
+   passé la troisième famille, le client ne sait même pas que les autres
+   existent. Ce bouton ouvre la liste complète, en pleine largeur, avec le
+   nombre d'articles de chacune — plus rien n'est caché.
+
+   Il sert dans les deux sens : choisir une famille, ou revenir à l'ensemble. */
+export function ToutesLesFamilles({ familles, actif, onFamille, onTout, total, etiquette = "Toutes les familles" }) {
+  const [ouvert, setOuvert] = useState(false);
+  const compte = (f) => (f.gammes || []).reduce((s, g) => s + (g.produits || []).length, 0);
+
+  return (
+    <div className="px-3 mt-3">
+      <button
+        onClick={() => setOuvert(!ouvert)}
+        className="w-full flex items-center gap-2.5 rounded-xl px-3 py-2.5 active:scale-[0.99] transition-transform"
+        style={{ background: VOILE("#1C1C1C", "D9"), border: `1.5px solid ${jaune}66`,
+                 fontFamily: CORPS, fontSize: 13, fontWeight: 700, color: texte }}
+      >
+        <span style={{ color: jaune, fontSize: 15, lineHeight: 1 }}>☰</span>
+        <span className="flex-1 text-left">{etiquette}</span>
+        <span style={{ color: texteDoux, fontWeight: 400, fontSize: 12 }}>
+          {familles.length} · {ouvert ? "fermer" : "voir"}
+        </span>
+      </button>
+
+      {ouvert && (
+        <div className="mt-2 rounded-xl overflow-hidden" style={{ border: `1px solid ${bordure}` }}>
+          {onTout && (
+            <button
+              onClick={() => { onTout(); setOuvert(false); }}
+              className="w-full flex items-center gap-3 px-3 py-3 text-left"
+              style={{ background: actif === "tous" ? VOILE("#241830", "E6") : CARTE,
+                       borderBottom: `1px solid ${bordure}`, fontFamily: CORPS, fontSize: 13,
+                       fontWeight: 700, color: actif === "tous" ? jaune : texte }}
+            >
+              <span style={{ fontSize: 15 }}>🛍️</span>
+              <span className="flex-1">Tout voir</span>
+              <span style={{ color: texteDoux, fontWeight: 400, fontSize: 12 }}>{total} articles</span>
+            </button>
+          )}
+          {familles.map((f, i) => (
+            <button
+              key={f.id}
+              onClick={() => { onFamille(f); setOuvert(false); }}
+              className="w-full flex items-center gap-3 px-3 py-3 text-left"
+              style={{ background: actif === f.id ? VOILE("#241830", "E6") : CARTE,
+                       borderBottom: i < familles.length - 1 ? `1px solid ${bordure}` : "none",
+                       fontFamily: CORPS, fontSize: 13, fontWeight: 700,
+                       color: actif === f.id ? jaune : texte }}
+            >
+              <span style={{ fontSize: 15 }}>{f.emoji}</span>
+              <span className="flex-1 min-w-0" style={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {f.nom}
+              </span>
+              {EST_VIDEOS(f)
+                ? <PlayCircle size={13} color={cyan} />
+                : <span style={{ color: texteDoux, fontWeight: 400, fontSize: 12 }}>{compte(f)} articles</span>}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
   );
 }
 

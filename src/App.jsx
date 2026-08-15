@@ -22,7 +22,7 @@ import {
   TOUS_PRODUITS, SELECTION_CHEF, VEDETTES, SECOURS, PRESENTATION, AJUSTEMENT,
   CLE, PROPORTION_PHOTO, STYLE_PHOTO, FOND_IMAGE, COLONNE, CARTE, VOILE, FOND_PAGE,
   DEGRADE, TITRE, CORPS, INTRO, ANIMATIONS, telegram, euros, MESSAGERIES,
-  MESSAGERIE, CONTACT, Photo, Video, Etiquette, Prix, BarreSection, Vedettes, RemonterEnHaut,
+  MESSAGERIE, CONTACT, Photo, Video, Etiquette, Prix, BarreSection, Vedettes, RemonterEnHaut, MoyensDePaiement,
   cartTotal, texteCommande, lienCommande, copierAvantDePartir,
   fond, fondCarte, bordure, texte, texteDoux, rose, violet, vert, jaune, cyan,
 } from "./commun.jsx";
@@ -851,6 +851,11 @@ export default function Boutique() {
                     <span className="text-[12px] uppercase tracking-wider" style={{ color: texteDoux, fontFamily: CORPS }}>Total</span>
                     <Prix valeur={cartTotal(panier)} taille={30} />
                   </div>
+
+                  {/* Les moyens de paiement se lisent AVANT d'envoyer la
+                      commande : découvrir qu'on ne peut payer qu'en espèces
+                      après coup, c'est une commande annulée. */}
+                  <div className="mb-3"><MoyensDePaiement total={cartTotal(panier)} /></div>
 
                   <a
                     href={lienCommande(panier)}
