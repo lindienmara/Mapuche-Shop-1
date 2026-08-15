@@ -9,13 +9,13 @@ export const BOUTIQUE = {
 
   // Logo : un emoji, ou un fichier déposé dans public/ (prioritaire).
   emoji: "",
-  logo: "/logo.jpg",
+  logo: "/produits/logo.jpg",
 
   // Image de fond de la boutique, dans public/. Vide = simple halo coloré.
   fondImage: "/produits/fond.jpg",
 
   // Dépôt GitHub de cette boutique, lu par l'atelier pour publier.
-  depot: "",
+  depot: "lindienmara/Mapuche-Shop-1",
 
   // Où arrivent les commandes : whatsapp, telegram, signal ou snapchat.
   // « contact » est le numéro ou le pseudo selon l'application choisie.
