@@ -1,0 +1,5 @@
+Toutes les VIDÉOS de la boutique vont dans ce dossier :
+vidéo d'ouverture, vidéos de produits, galerie de vidéos.
+
+Format MP4 uniquement, 20 Mo au plus par fichier.
+Ne renomme pas un fichier une fois qu'il est en place.

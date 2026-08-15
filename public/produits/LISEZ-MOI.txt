@@ -1,0 +1,5 @@
+Toutes les IMAGES de la boutique vont dans ce dossier :
+logo, image de fond, bannières de familles, photos de produits.
+
+Ne renomme pas un fichier une fois qu'il est en place :
+son chemin est écrit dans src/config.js ou src/catalogue.js.
