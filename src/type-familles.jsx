@@ -41,7 +41,7 @@ export function EcranFamilles({ onFamille, onProduit }) {
                 <div className="flex gap-2 mt-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
                   {SELECTION_CHEF.map((p) => (
                     <button
-                      key={p.ref}
+                      key={p.cle || p.ref}
                       onClick={() => onProduit(p.famille, p.gamme, p)}
                       className="flex-shrink-0 rounded-xl px-3 py-2 text-left active:scale-95 transition-transform"
                       style={{ background: CARTE, border: `1px solid ${bordure}`, minWidth: 148 }}

@@ -1,14 +1,15 @@
 // LE MOTEUR — ASSEMBLAGE
 // ----------------------
-// Ce fichier ne contient plus que les ecrans communs aux deux types (gammes,
+// Ce fichier ne contient plus que les ecrans communs aux trois types (gammes,
 // produits, fiche, infos, liens, avis, intro, visionneuse, videos) et
 // l'aiguillage : selon le type de la boutique, l'accueil est celui du
 // type 1 ou celui du type 2.
 //
-// Trois fichiers, trois roles :
+// Quatre fichiers, quatre roles :
 //   commun.jsx        ce que TOUTES les boutiques partagent
 //   type-familles.jsx le type 1, et lui seul
 //   type-liste.jsx    le type 2, et lui seul
+//   type-luxe.jsx     le type 3, et lui seul
 
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
@@ -19,14 +20,15 @@ import { visuelFamille, visuelProduit } from "./visuels.js";
 import {
   FONTS, APERCU, BOUTIQUE, COULEURS, FAMILLES, EST_VIDEOS, GALERIE,
   TOUS_PRODUITS, SELECTION_CHEF, VEDETTES, SECOURS, PRESENTATION, AJUSTEMENT,
-  PROPORTION_PHOTO, STYLE_PHOTO, FOND_IMAGE, COLONNE, CARTE, VOILE, FOND_PAGE,
+  CLE, PROPORTION_PHOTO, STYLE_PHOTO, FOND_IMAGE, COLONNE, CARTE, VOILE, FOND_PAGE,
   DEGRADE, TITRE, CORPS, INTRO, ANIMATIONS, telegram, euros, MESSAGERIES,
-  MESSAGERIE, CONTACT, Photo, Video, Etiquette, Prix, BarreSection, Vedettes,
+  MESSAGERIE, CONTACT, Photo, Video, Etiquette, Prix, BarreSection, Vedettes, RemonterEnHaut,
   cartTotal, texteCommande, lienCommande, copierAvantDePartir,
   fond, fondCarte, bordure, texte, texteDoux, rose, violet, vert, jaune, cyan,
 } from "./commun.jsx";
 import { EcranFamilles } from "./type-familles.jsx";
 import { EcranListe } from "./type-liste.jsx";
+import { EcranLuxe } from "./type-luxe.jsx";
 /* Une famille sans aucune gamme ouvrait un ecran entierement vide : le titre,
    puis rien. Vu du visiteur — et de qui tient la boutique — le bouton semble
    simplement ne pas marcher, alors qu'il a parfaitement fonctionne. On ne
@@ -53,58 +55,37 @@ function RayonVide({ famille, onRetour }) {
   );
 }
 
-function EcranGammes({ famille, onGamme, onRetour }) {
-  // Une gamme sans le moindre produit est un cul-de-sac : on ne la propose pas.
-  const gammes = (famille.gammes || []).filter((g) => (g.produits || []).length > 0);
-  return (
-    <>
-      <BarreSection titre={`${famille.emoji} ${famille.nom}`} onRetour={onRetour} />
-      {gammes.length === 0 && <RayonVide famille={famille} onRetour={onRetour} />}
-      <div className="flex flex-col gap-3 px-3 mt-4">
-        {gammes.map((g) => (
-          <button
-            key={g.id}
-            onClick={() => onGamme(g)}
-            className="rounded-2xl px-4 py-4 flex items-center gap-3 text-left active:scale-[0.98] transition-transform"
-            style={{ backgroundImage: `linear-gradient(100deg, ${violet}, ${rose})`, boxShadow: `0 6px 22px ${violet}44` }}
-          >
-            <div className="flex-1 min-w-0">
-              <p style={{ fontFamily: TITRE, fontSize: 21, color: "#fff", letterSpacing: ".5px" }}>
-                {g.nom} <span style={{ fontSize: 13, color: cyan }}>{g.etiquette}</span>
-              </p>
-              <p className="text-[11px] uppercase tracking-wider" style={{ color: "#FFFFFFCC", fontFamily: CORPS }}>
-                {g.sousTitre}
-              </p>
-            </div>
-            <span
-              className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
-              style={{ background: "#2E5BFF" }}
-            >
-              <ChevronRight size={18} color="#fff" />
-            </span>
-          </button>
-        ))}
-      </div>
-    </>
-  );
-}
-
+/* Cliquer une famille amène ICI, directement sur ses articles.
+   Avant, on tombait sur une liste de gammes : un menu de plus à traverser
+   avant de voir la moindre image, alors que c'est l'image qu'on vient
+   chercher. Les gammes n'ont pas disparu — elles sont devenues le filtre en
+   haut de cet écran, et on n'y voit jamais que les articles de la famille
+   choisie. */
 function EcranProduits({ famille, gamme, onProduit, onRetour }) {
   const [recherche, setRecherche] = useState("");
-  const [gammeFiltre, setGammeFiltre] = useState(gamme.id);
+  // « toutes » par défaut : on arrive d'une famille, on veut la voir entière.
+  // La gamme n'est imposée que si l'on vient d'un produit précis.
+  const [gammeFiltre, setGammeFiltre] = useState(gamme ? gamme.id : "toutes");
+
+  // Le filtre peut désigner une gamme d'une AUTRE famille — après un retour,
+  // ou si le catalogue a changé. On le vérifie plutôt que de faire confiance :
+  // sans ça, la recherche échouait et l'écran se vidait sans rien expliquer.
+  const gammeChoisie = famille.gammes.find((g) => g.id === gammeFiltre) || null;
+  const filtreValide = gammeFiltre === "toutes" || !!gammeChoisie;
 
   const produits = useMemo(() => {
-    const source =
-      gammeFiltre === "toutes"
-        ? famille.gammes.flatMap((g) => g.produits.map((p) => ({ ...p, gamme: g })))
-        : famille.gammes.find((g) => g.id === gammeFiltre).produits.map((p) => ({ ...p, gamme: famille.gammes.find((g) => g.id === gammeFiltre) }));
+    // Chaque produit emporte sa clé — voir CLE dans commun.jsx : une référence
+    // peut resservir d'une collection à l'autre, sa place non.
+    const source = !filtreValide || gammeFiltre === "toutes"
+      ? famille.gammes.flatMap((g) => (g.produits || []).map((p, i) => ({ ...p, gamme: g, cle: CLE(famille, g, i, p) })))
+      : (gammeChoisie.produits || []).map((p, i) => ({ ...p, gamme: gammeChoisie, cle: CLE(famille, gammeChoisie, i, p) }));
     const q = recherche.trim().toLowerCase();
     return q ? source.filter((p) => p.nom.toLowerCase().includes(q)) : source;
-  }, [famille, gammeFiltre, recherche]);
+  }, [famille, gammeFiltre, recherche, filtreValide, gammeChoisie]);
 
   return (
     <>
-      <BarreSection titre={gammeFiltre === "toutes" ? famille.nom : famille.gammes.find((g) => g.id === gammeFiltre).nom} onRetour={onRetour} />
+      <BarreSection titre={filtreValide && gammeChoisie ? gammeChoisie.nom : famille.nom} onRetour={onRetour} />
 
       <div className="mx-3 mt-3 flex items-center gap-2 rounded-xl px-3 py-2.5"
         style={{ background: "#1C1C1C", border: `1px solid ${bordure}` }}>
@@ -123,24 +104,30 @@ function EcranProduits({ famille, gamme, onProduit, onRetour }) {
         )}
       </div>
 
-      <div className="mx-3 mt-2">
-        <select
-          value={gammeFiltre}
-          onChange={(e) => setGammeFiltre(e.target.value)}
-          className="w-full rounded-xl px-3 py-2.5 text-[13px] outline-none appearance-none"
-          style={{ background: VOILE("#1C1C1C", "D9"), border: `1px solid ${bordure}`, color: texte, fontFamily: CORPS }}
-        >
-          <option value="toutes">🧑‍🌾 — Toutes les gammes</option>
-          {famille.gammes.map((g) => (
-            <option key={g.id} value={g.id}>{g.nom}</option>
-          ))}
-        </select>
-      </div>
+      {famille.gammes.length > 1 && (
+        <div className="mx-3 mt-2">
+          <select
+            value={filtreValide ? gammeFiltre : "toutes"}
+            onChange={(e) => setGammeFiltre(e.target.value)}
+            className="w-full rounded-xl px-3 py-2.5 text-[13px] outline-none appearance-none"
+            style={{ background: VOILE("#1C1C1C", "D9"), border: `1px solid ${bordure}`, color: texte, fontFamily: CORPS }}
+          >
+            <option value="toutes">Tout {famille.nom} — {famille.gammes.reduce((s, g) => s + (g.produits || []).length, 0)} articles</option>
+            {famille.gammes.map((g) => (
+              <option key={g.id} value={g.id}>{g.nom} — {(g.produits || []).length}</option>
+            ))}
+          </select>
+        </div>
+      )}
+
+      {produits.length === 0 && <RayonVide famille={famille} onRetour={onRetour} />}
+
+      <RemonterEnHaut articles={produits.length} />
 
       <div className="grid grid-cols-2 gap-3 px-3 mt-4">
         {produits.map((p) => (
           <button
-            key={p.ref}
+            key={p.cle || p.ref}
             onClick={() => onProduit(famille, p.gamme, p)}
             className="relative rounded-xl overflow-hidden text-left active:scale-[0.97] transition-transform"
             style={{ background: CARTE, border: `2px solid ${violet}` }}
@@ -576,7 +563,7 @@ function EcranVideos({ famille, onRetour, onVideo }) {
                 const jouable = !!(p.video || "").trim();
                 return (
                   <button
-                    key={p.ref}
+                    key={p.cle || p.ref}
                     onClick={() => jouable && onVideo(p)}
                     className="relative rounded-2xl overflow-hidden text-left active:scale-[0.97] transition-transform"
                     style={{
@@ -668,10 +655,20 @@ export default function Boutique() {
     setOnglet("accueil"); setFamille(f); setGamme(g); setProduit(p);
   };
 
+  /* Choisir une famille remet les niveaux du dessous à zéro.
+     Sans ça, un produit ou une gamme d'une visite précédente restait en
+     mémoire : on cliquait sur une famille et c'est l'ancien écran qui
+     revenait. Le bouton semblait alors « ne pas marcher », et seulement de
+     temps en temps — selon ce qu'on avait consulté avant. */
+  const choisirFamille = (f) => {
+    setOnglet("accueil"); setProduit(null); setGamme(null); setFamille(f);
+  };
+
+  // Depuis un article on revient a la famille ; depuis la famille, a l accueil.
+  // Il n y a plus de niveau intermediaire a traverser.
   const retour = () => {
-    if (produit) setProduit(null);
-    else if (gamme) setGamme(null);
-    else if (famille) setFamille(null);
+    if (produit) { setProduit(null); return; }
+    setGamme(null); setFamille(null);
   };
 
   const accueil = () => {
@@ -764,14 +761,14 @@ export default function Boutique() {
               <EcranVideos famille={famille} onRetour={retour} onVideo={setVideo} />
             ) : produit ? (
               <EcranFiche famille={famille} gamme={gamme} produit={produit} onRetour={retour} onAjouter={ajouter} onOuvrir={(p, n) => setVue({ produit: p, depart: n || 0 })} onVideo={setVideo} />
-            ) : gamme ? (
-              <EcranProduits famille={famille} gamme={gamme} onProduit={allerProduit} onRetour={retour} />
             ) : famille ? (
-              <EcranGammes famille={famille} onGamme={setGamme} onRetour={retour} />
+              <EcranProduits famille={famille} gamme={gamme} onProduit={allerProduit} onRetour={retour} />
             ) : PRESENTATION === "liste" ? (
-              <EcranListe onProduit={allerProduit} onFamille={setFamille} />
+              <EcranListe onProduit={allerProduit} onFamille={choisirFamille} />
+            ) : PRESENTATION === "luxe" ? (
+              <EcranLuxe onFamille={choisirFamille} onProduit={allerProduit} />
             ) : (
-              <EcranFamilles onFamille={setFamille} onProduit={allerProduit} />
+              <EcranFamilles onFamille={choisirFamille} onProduit={allerProduit} />
             )
           )}
         </div>

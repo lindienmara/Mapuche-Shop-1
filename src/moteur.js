@@ -10,7 +10,7 @@
 
 export const MOTEUR = {
   modele: "vitrine-3-niveaux",
-  version: "3.9",
+  version: "3.12",
   // Ce que sait faire cette version, pour information.
   capacites: [
     "familles > gammes > produits",
@@ -29,5 +29,8 @@ export const MOTEUR = {
     "les deux types de boutique sont separes : corriger l un ne touche pas l autre",
     "choisir une categorie ne montre plus que cette categorie",
     "une famille sans article le dit, au lieu d ouvrir un ecran vide",
+    "trois types de boutique : par familles, en liste, ou La Maison",
+    "une famille mene directement a ses articles, avec un bouton pour remonter",
+    "des references de produit en double n empechent plus l affichage",
   ],
 };

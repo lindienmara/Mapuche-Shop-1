@@ -54,8 +54,24 @@ export const EST_VIDEOS = (f) => f.type === "videos";
 export const GALERIE = (p) =>
   Array.isArray(p.images) && p.images.length ? p.images : (p.image ? [p.image] : []);
 
+/* ★ POURQUOI UNE CLÉ, ET PAS LA RÉFÉRENCE DU PRODUIT
+   React identifie chaque carte d'une liste par une « clé ». Deux cartes de même
+   clé, et il les confond : en changeant de famille, il garde les anciennes
+   cartes, en oublie de nouvelles, et mélange les deux. À l'écran, ça donne des
+   articles qui manquent et des articles d'une autre famille qui s'ajoutent à la
+   suite — sans la moindre erreur signalée.
+
+   Or rien n'oblige une référence à être unique : REF-003 peut servir dans trois
+   collections différentes, et c'est bien légitime. La clé est donc construite
+   ici, à partir de l'endroit exact où le produit se trouve — famille, gamme,
+   rang. Deux produits ne peuvent pas occuper la même place.
+
+   Conséquence : les catalogues qui réutilisent leurs références s'affichent
+   correctement, sans avoir à les renuméroter. */
+export const CLE = (f, g, i, p) => `${f.id}|${g.id}|${i}|${p.ref || ""}`;
+
 export const TOUS_PRODUITS = FAMILLES.filter((f) => !EST_VIDEOS(f)).flatMap((f) =>
-  f.gammes.flatMap((g) => g.produits.map((p) => ({ ...p, famille: f, gamme: g })))
+  f.gammes.flatMap((g) => g.produits.map((p, i) => ({ ...p, famille: f, gamme: g, cle: CLE(f, g, i, p) })))
 );
 export const SELECTION_CHEF = TOUS_PRODUITS.filter((p) => p.chef);
 
@@ -72,7 +88,8 @@ export const VEDETTES = TOUS_PRODUITS.filter((p) => p.vedette).slice(0, 8);
 // Le dessin de secours d un produit : le meme visuel, sans sa photo.
 export const SECOURS = (p, famille) => visuelProduit({ ...p, image: "", images: [] }, famille.couleurs, famille.glyphe);
 
-export const PRESENTATION = BOUTIQUE.presentation === "liste" ? "liste" : "familles";
+export const PRESENTATION = ["liste", "luxe"].includes(BOUTIQUE.presentation)
+  ? BOUTIQUE.presentation : "familles";
 
 // Cadrage des photos. « carre » remplit le cadre quitte à couper les bords,
 // « entier » montre toute l'image quitte à laisser des bandes. Jamais de
@@ -342,6 +359,43 @@ export function BarreSection({ titre, onRetour }) {
 // « vedettesSeules » sert à la présentation en liste : elle réutilise le haut
 // de l'accueil — les carrés en vedette — puis affiche sa propre grille.
 
+/* ══════════ REMONTER EN HAUT ══════════
+   Une famille de cent articles fait une page très longue. Arrivé en bas, il
+   faut pouvoir revenir d'un geste : sans ça, on fait défiler à l'envers pendant
+   dix secondes, ou on abandonne.
+
+   Le bouton n'apparaît qu'une fois qu'on a vraiment descendu — plus tôt, il ne
+   servirait qu'à encombrer. Il se place au-dessus de la barre du bas, du côté
+   du pouce. */
+// ★ Pas d'écoute du défilement, volontairement.
+// Une première version n'affichait le bouton qu'une fois descendu. Elle
+// dépendait des événements de défilement — et il existe des navigateurs qui
+// n'en émettent aucun alors que la page défile pour de bon. Le bouton restait
+// alors introuvable, sans qu'on comprenne pourquoi.
+//
+// La condition est donc devenue une donnée, pas un événement : on affiche le
+// bouton quand la liste est longue. C'est vérifiable, ça ne dépend d'aucun
+// navigateur, et ça répond à la vraie question — « cette page est-elle longue
+// au point qu'on veuille en remonter ? »
+export function RemonterEnHaut({ articles = 0, seuil = 12 }) {
+  if (articles < seuil) return null;
+  return (
+    <button
+      onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+      aria-label="Revenir en haut de la page"
+      className="fixed z-40 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+      style={{
+        right: 14, bottom: 92, width: 46, height: 46,
+        background: VOILE("#141018", "E6"), border: `1.5px solid ${jaune}`,
+        boxShadow: `0 6px 20px #000000AA`, color: jaune,
+        fontFamily: CORPS, fontSize: 19, lineHeight: 1,
+      }}
+    >
+      ↑
+    </button>
+  );
+}
+
 /* ══════════ LES VEDETTES ══════════
    De petits carres noirs, quatre par ligne. Compacts par principe : le
    catalogue doit rester visible juste en dessous, sans faire defiler.
@@ -352,7 +406,7 @@ export function Vedettes({ onProduit }) {
     <div className="mx-3 mt-3 grid grid-cols-4 gap-2">
             {VEDETTES.map((p) => (
               <button
-                key={p.ref}
+                key={p.cle || p.ref}
                 onClick={() => onProduit(p.famille, p.gamme, p)}
                 className="relative rounded-xl overflow-hidden text-left active:scale-95 transition-transform"
                 style={{ background: "#000", border: `1px solid ${jaune}55` }}

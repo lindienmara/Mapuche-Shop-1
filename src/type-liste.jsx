@@ -12,7 +12,7 @@ import { Search, PlayCircle, Star, X } from "lucide-react";
 import { visuelProduit } from "./visuels.js";
 import {
   BOUTIQUE, FAMILLES, TOUS_PRODUITS, EST_VIDEOS, SECOURS, GALERIE, AJUSTEMENT,
-  STYLE_PHOTO, Vedettes, Photo, Prix, Etiquette, VOILE, CARTE, COLONNE, DEGRADE,
+  STYLE_PHOTO, Vedettes, RemonterEnHaut, Photo, Prix, Etiquette, VOILE, CARTE, COLONNE, DEGRADE,
   TITRE, CORPS, euros, fond, fondCarte, bordure, texte, texteDoux, rose, violet,
   vert, jaune, cyan,
 } from "./commun.jsx";
@@ -58,6 +58,7 @@ export function EcranListe({ onProduit, onFamille }) {
 
   return (
     <>
+      <RemonterEnHaut articles={produits.length} />
       {toutAfficher && <Vedettes onProduit={onProduit} />}
       <div className="px-3 mt-3">
         <div className="flex items-center gap-2 rounded-xl px-3 py-2.5"
@@ -105,7 +106,7 @@ export function EcranListe({ onProduit, onFamille }) {
         <div className="grid grid-cols-2 gap-3 px-3 mt-3">
           {produits.map((p) => (
             <button
-              key={p.ref}
+              key={p.cle || p.ref}
               onClick={() => onProduit(p.famille, p.gamme, p)}
               className="relative rounded-xl overflow-hidden text-left active:scale-[0.97] transition-transform"
               style={{ background: CARTE, border: `2px solid ${p.famille.couleurs[0]}` }}
