@@ -337,18 +337,6 @@ export const FAMILLES = [
       },
     ],
   },
-  {
-    id: "vetements-chaussures",
-    nom: "VÊTEMENTS/CHAUSSURES ",
-    emoji: "👟",
-    glyphe: "boite",
-    image: "",
-    type: "produits",
-    couleurs: ["#FF1B8D", "#7B2FF7"],
-    gammes: [
-
-    ],
-  },
 ];
 
 // Raccourcis pratiques, calculés une fois au démarrage.
