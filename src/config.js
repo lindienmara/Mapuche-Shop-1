@@ -38,6 +38,19 @@ export const BOUTIQUE = {
   // Bloc mis en avant sur l'accueil. Vide = masqué.
   enAvant: "",
 
+  /* Moyens de paiement ANNONCÉS au client, avant qu'il commande.
+     La boutique ne demande jamais de numéro de carte : un site sans serveur ne
+     peut pas encaisser une carte sans danger. Un « lien » ouvre la page de ton
+     prestataire — PayPal, Lydia — et c'est lui qui encaisse, chez lui. */
+  paiements: [
+
+  ],
+  paiementNote: "",
+
+  // Envoyer la commande dans une conversation. Mets false pour une boutique
+  // qui ne fonctionne qu'au paiement en ligne.
+  commandeActive: true,
+
   // Ouverture de la boutique, jouée une fois par visite.
   // introVideo vide = titre animé, sans rien à charger.
   introActive: true,
@@ -60,6 +73,11 @@ export const BOUTIQUE = {
   liens: [
     { titre: "👻SnapChat👻", url: "https://www.snapchat.com/add/mapuche_art?share_id=dx4YhJ92Y5Y&locale=fr-FR" },
     { titre: "👽TikTok👽", url: "https://www.tiktok.com/@mapuche.arts?_r=1&_t=ZN-98pmckqPQ62" },
+  ],
+
+  // Les avis en images : des captures de conversations, montrées telles quelles.
+  avis: [
+    { image: "/produits/avis.jpg", legende: "" },
   ],
 };
 
