@@ -10,7 +10,7 @@
 
 export const MOTEUR = {
   modele: "vitrine-3-niveaux",
-  version: "3.21",
+  version: "3.22",
   // Ce que sait faire cette version, pour information.
   capacites: [
     "familles > gammes > produits",
@@ -42,5 +42,7 @@ export const MOTEUR = {
     "le bouton d envoi dans la conversation peut etre eteint",
     "sans contact ni paiement, la boutique devient une vitrine sans panier",
     "des avis en images : les captures de conversations defilent en carrousel",
+    "le client ne depose plus d avis lui-meme : le vendeur seul les publie",
+    "sans moyen d etre contacte, aucun lien vers la messagerie nulle part",
   ],
 };

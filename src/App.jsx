@@ -331,11 +331,17 @@ function EcranLiens() {
   );
 }
 
+/* L'ONGLET AVIS
+   Les avis ne se déposent PAS depuis la boutique. C'est le vendeur qui les
+   publie, et uniquement sous forme de captures d'écran de vraies conversations
+   — voir l'onglet Avis de l'atelier.
+
+   Il y avait ici un bouton « DONNER MON AVIS » qui ouvrait la messagerie. Il
+   est retiré : il ouvrait une porte que personne n'avait demandé d'ouvrir, il
+   promettait au client que son message serait publié — ce qui n'a jamais été
+   vrai — et il donnait le numéro du vendeur à quiconque passait sur l'onglet,
+   y compris quand aucune façon d'être contacté n'était activée. */
 function EcranAvis() {
-  /* Deux écrans en un, et le choix ne dépend que des données : s'il y a des
-     images d'avis, on les montre ; sinon on invite à en laisser un. Aucun avis
-     n'est écrit par la boutique — ce sont des captures de vraies
-     conversations. */
   if (AVIS.length) {
     return (
       <>
@@ -345,16 +351,6 @@ function EcranAvis() {
             De vrais messages de clients, en capture d'écran. Appuie sur une image pour la lire en grand.
           </p>
           <Carrousel images={AVIS} />
-          <a
-            href={MESSAGERIE.lien(CONTACT, "Bonjour, je souhaite laisser un avis sur ma commande :")}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => { if (!MESSAGERIE.prerempli) copierAvantDePartir("Bonjour, je souhaite laisser un avis sur ma commande :"); }}
-            className="flex items-center justify-center gap-2 mt-5 px-5 py-3 rounded-xl active:scale-95 transition-transform"
-            style={{ background: MESSAGERIE.couleur, color: MESSAGERIE.encre, fontFamily: TITRE, fontSize: 15, textDecoration: "none" }}
-          >
-            <MessageCircle size={16} /> DONNER MON AVIS
-          </a>
         </div>
       </>
     );
@@ -368,18 +364,8 @@ function EcranAvis() {
           <Star size={28} color={jaune} className="mx-auto" />
           <p className="mt-3" style={{ fontFamily: TITRE, fontSize: 19, color: texte }}>PAS ENCORE D'AVIS</p>
           <p className="text-[13px] mt-2" style={{ color: texteDoux, fontFamily: CORPS, lineHeight: 1.6 }}>
-            Les avis affichés ici seront de vrais avis de clients. Rien n'est inventé.
+            Les avis affichés ici sont de vrais messages de clients, publiés tels quels. Rien n'est inventé.
           </p>
-          <a
-            href={MESSAGERIE.lien(CONTACT, "Bonjour, je souhaite laisser un avis sur ma commande :")}
-            target="_blank"
-            rel="noopener noreferrer"
-            onClick={() => { if (!MESSAGERIE.prerempli) copierAvantDePartir("Bonjour, je souhaite laisser un avis sur ma commande :"); }}
-            className="inline-flex items-center gap-2 mt-5 px-5 py-3 rounded-xl active:scale-95 transition-transform"
-            style={{ background: MESSAGERIE.couleur, color: MESSAGERIE.encre, fontFamily: TITRE, fontSize: 15 }}
-          >
-            <MessageCircle size={16} /> DONNER MON AVIS
-          </a>
         </div>
       </div>
     </>
