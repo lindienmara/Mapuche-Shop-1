@@ -22,7 +22,7 @@ import {
   TOUS_PRODUITS, SELECTION_CHEF, VEDETTES, SECOURS, PRESENTATION, AJUSTEMENT,
   CLE, PROPORTION_PHOTO, STYLE_PHOTO, FOND_IMAGE, COLONNE, CARTE, VOILE, FOND_PAGE,
   DEGRADE, TITRE, CORPS, INTRO, ANIMATIONS, telegram, euros, MESSAGERIES,
-  MESSAGERIE, CONTACT, Photo, Video, Etiquette, Prix, BarreSection, Vedettes, RemonterEnHaut, MoyensDePaiement,
+  MESSAGERIE, CONTACT, Photo, Video, Etiquette, Prix, BarreSection, Vedettes, RemonterEnHaut, MoyensDePaiement, referenceCommande, PEUT_COMMANDER,
   cartTotal, texteCommande, lienCommande, copierAvantDePartir,
   fond, fondCarte, bordure, texte, texteDoux, rose, violet, vert, jaune, cyan,
 } from "./commun.jsx";
@@ -261,7 +261,9 @@ function EcranFiche({ famille, gamme, produit, onRetour, onAjouter, onOuvrir, on
             </div>
           </div>
 
-          {produit.dispo ? (
+          {/* Vitrine : aucun chemin pour commander, donc aucun bouton qui le
+              laisserait croire. Le prix et la fiche restent. */}
+          {!PEUT_COMMANDER ? null : produit.dispo ? (
             <button
               onClick={() => onAjouter(produit, qte)}
               className="w-full mt-4 py-3.5 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
@@ -615,6 +617,9 @@ export default function Boutique() {
   const [panier, setPanier] = useState([]);
   const [panierOuvert, setPanierOuvert] = useState(false);
   const [vue, setVue] = useState(null);   // { produit, depart } : la visionneuse
+  // Une seule reference par visite : elle doit rester la meme entre le panier,
+  // le message envoye et le virement, sinon elle ne relie rien.
+  const [reference] = useState(referenceCommande);
   const [video, setVideo] = useState(null);
 
   // L'intro ne se rejoue pas à chaque page, seulement à chaque visite. En mode
@@ -733,22 +738,24 @@ export default function Boutique() {
                 {BOUTIQUE.nom}
               </p>
             </button>
-            <button
-              onClick={() => setPanierOuvert(true)}
-              className="relative w-11 h-11 rounded-xl flex items-center justify-center active:scale-95 transition-transform"
-              style={{ background: CARTE, border: `1px solid ${bordure}` }}
-              aria-label="Ouvrir le panier"
-            >
-              <ShoppingCart size={19} color={texte} />
-              {nbArticles > 0 && (
-                <span
-                  className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full text-[11px] font-bold flex items-center justify-center"
-                  style={{ background: vert, color: "#0B0B0B", border: `2px solid ${fond}` }}
-                >
-                  {nbArticles}
-                </span>
-              )}
-            </button>
+            {PEUT_COMMANDER && (
+              <button
+                onClick={() => setPanierOuvert(true)}
+                className="relative w-11 h-11 rounded-xl flex items-center justify-center active:scale-95 transition-transform"
+                style={{ background: CARTE, border: `1px solid ${bordure}` }}
+                aria-label="Ouvrir le panier"
+              >
+                <ShoppingCart size={19} color={texte} />
+                {nbArticles > 0 && (
+                  <span
+                    className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full text-[11px] font-bold flex items-center justify-center"
+                    style={{ background: vert, color: "#0B0B0B", border: `2px solid ${fond}` }}
+                  >
+                    {nbArticles}
+                  </span>
+                )}
+              </button>
+            )}
           </div>
         </div>
 
@@ -803,7 +810,7 @@ export default function Boutique() {
         </div>
 
         {/* panier */}
-        {panierOuvert && (
+        {panierOuvert && PEUT_COMMANDER && (
           <div
             className="fixed inset-0 z-40 flex items-end justify-center"
             style={{ background: "rgba(0,0,0,.8)" }}
@@ -855,22 +862,39 @@ export default function Boutique() {
                   {/* Les moyens de paiement se lisent AVANT d'envoyer la
                       commande : découvrir qu'on ne peut payer qu'en espèces
                       après coup, c'est une commande annulée. */}
-                  <div className="mb-3"><MoyensDePaiement total={cartTotal(panier)} /></div>
+                  <div className="mb-3">
+                    <MoyensDePaiement total={cartTotal(panier)} reference={reference} />
+                  </div>
 
-                  <a
-                    href={lienCommande(panier)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onClick={() => { if (!MESSAGERIE.prerempli) copierAvantDePartir(texteCommande(panier)); }}
-                    className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl active:scale-95 transition-transform"
-                    style={{ background: MESSAGERIE.couleur, color: MESSAGERIE.encre, fontFamily: TITRE, fontSize: 16 }}
-                  >
-                    <MessageCircle size={18} /> ENVOYER SUR {MESSAGERIE.nom.toUpperCase()}
-                  </a>
-                  {!MESSAGERIE.prerempli && (
-                    <p className="text-[11.5px] text-center mt-2.5" style={{ color: texteDoux, fontFamily: CORPS, lineHeight: 1.5 }}>
-                      {MESSAGERIE.nom} ne permet pas d'écrire le message à l'avance.
-                      <br /><b style={{ color: texte }}>Ta commande est copiée</b> — colle-la dans la conversation.
+                  {/* Le bouton d'envoi peut être éteint depuis l'atelier : une
+                      boutique qui n'encaisse qu'en ligne n'a pas de commande à
+                      recevoir dans une conversation. */}
+                  {/* Sans contact renseigné, le lien mènerait dans le vide :
+                      wa.me sans numéro, t.me sans pseudo. Un bouton qui ne mène
+                      nulle part est pire que pas de bouton. */}
+                  {BOUTIQUE.commandeActive !== false && CONTACT ? (
+                    <>
+                      <a
+                        href={lienCommande(panier, reference)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={() => { if (!MESSAGERIE.prerempli) copierAvantDePartir(texteCommande(panier, reference)); }}
+                        className="flex items-center justify-center gap-2 w-full py-3.5 rounded-xl active:scale-95 transition-transform"
+                        style={{ background: MESSAGERIE.couleur, color: MESSAGERIE.encre, fontFamily: TITRE, fontSize: 16 }}
+                      >
+                        <MessageCircle size={18} /> ENVOYER SUR {MESSAGERIE.nom.toUpperCase()}
+                      </a>
+                      {!MESSAGERIE.prerempli && (
+                        <p className="text-[11.5px] text-center mt-2.5" style={{ color: texteDoux, fontFamily: CORPS, lineHeight: 1.5 }}>
+                          {MESSAGERIE.nom} ne permet pas d'écrire le message à l'avance.
+                          <br /><b style={{ color: texte }}>Ta commande est copiée</b> — colle-la dans la conversation.
+                        </p>
+                      )}
+                    </>
+                  ) : (
+                    <p className="text-[11.5px] text-center" style={{ color: texteDoux, fontFamily: CORPS, lineHeight: 1.5 }}>
+                      Règle ta commande par un des moyens ci-dessus,
+                      <br />en indiquant la référence <b style={{ color: jaune }}>{reference}</b>.
                     </p>
                   )}
                   <button onClick={() => setPanier([])} className="w-full text-[11px] mt-3 py-1" style={{ color: "#6B6B6B", fontFamily: CORPS }}>

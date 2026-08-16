@@ -257,10 +257,18 @@ export const CONTACT = String(BOUTIQUE.contact || BOUTIQUE.whatsapp || "").trim(
    Les liens ci-dessous ouvrent la page du prestataire — c'est lui qui encaisse,
    sur sa propre page. */
 const CATALOGUE_PAIEMENTS = {
-  paypal: { nom: "PayPal", emoji: "🅿️" },
+  paypal: { nom: "PayPal", emoji: "🅿️", choix: true },
   revolut: { nom: "Revolut", emoji: "🔵" },
   lydia: { nom: "Lydia", emoji: "🇱" },
   wero: { nom: "Wero", emoji: "🇪🇺" },
+};
+
+/* Sur PayPal, le client choisit lui-même entre deux façons de payer, et ce
+   choix ne se devine pas. Le vendeur dit laquelle il attend ; la boutique la
+   lui rappelle au moment exact où il va la choisir — pas avant, pas après. */
+const CONSIGNES = {
+  proches: "Choisis « Entre proches » — aucun frais.",
+  biens: "Choisis « Biens et services » au moment de payer.",
 };
 
 /* Le montant du panier ajouté au lien — uniquement là où le prestataire
@@ -271,9 +279,10 @@ function avecMontant(id, lien, total) {
   const base = String(lien || "").replace(/\/+$/, "");
   const somme = Number(total);
   if (!base || !(somme > 0)) return base;
-  const m = somme.toFixed(2);
-  if (id === "paypal" && /paypal\.me\//i.test(base)) return `${base}/${m}`;
-  if (id === "revolut" && /revolut\.me\//i.test(base)) return `${base}/eur${m}`;
+  // PayPal seul : paypal.me/nom/12.50 est un format publié. Pour les autres, on
+  // ne fabrique rien — une adresse inventée mène à une page introuvable, et le
+  // client abandonne. Mieux vaut qu'il saisisse la somme.
+  if (id === "paypal" && /paypal\.me\//i.test(base)) return `${base}/${somme.toFixed(2)}`;
   return base;
 }
 
@@ -303,10 +312,38 @@ export const PAIEMENTS = (BOUTIQUE.paiements || [])
     emoji: CATALOGUE_PAIEMENTS[p.id] ? CATALOGUE_PAIEMENTS[p.id].emoji : (p.emoji || "💳"),
     lien: lienSur(p.lien),
     note: p.note || "",
+    consigne: (CATALOGUE_PAIEMENTS[p.id] || {}).choix ? CONSIGNES[p.nature] || "" : "",
   }))
   .filter((p) => !!p.lien);
 
-export function MoyensDePaiement({ total = 0 }) {
+/* ★ BOUTIQUE OU VITRINE — la boutique le déduit, on ne le lui dit pas.
+
+   Commander suppose un chemin : soit une conversation où envoyer la commande,
+   soit un moyen de paiement relié. Sans ni l'un ni l'autre, il n'existe aucune
+   façon d'acheter — et un panier ne sert alors qu'à décevoir : on y met des
+   articles, on cherche comment valider, il n'y a rien.
+
+   Dans ce cas la boutique devient une VITRINE : les articles, les photos et les
+   prix restent, le panier disparaît entièrement. C'est un usage légitime — un
+   catalogue qu'on montre, une carte de restaurant, une collection — et non une
+   boutique en panne. */
+export const PEUT_COMMANDER =
+  (BOUTIQUE.commandeActive !== false && CONTACT !== "") || PAIEMENTS.length > 0;
+
+/* La référence de commande.
+   Un virement arrive chez le vendeur sans dire à quelle commande il répond :
+   « X vous a envoyé 3,20 € », et rien d'autre. Avec deux clients dans la même
+   minute, plus moyen de savoir qui a payé quoi.
+
+   Cette référence courte relie les deux. Elle s'affiche au client, part dans le
+   message de commande, et il la recopie dans le mot du virement. Elle ne
+   protège de rien — elle permet seulement de s'y retrouver, ce qui manquait. */
+export function referenceCommande() {
+  const t = Date.now().toString(36).toUpperCase();
+  return t.slice(-4);
+}
+
+export function MoyensDePaiement({ total = 0, reference = "" }) {
   // Aucun moyen relié : le bloc entier disparaît, note comprise. Une précision
   // sur un paiement qui n'existe pas n'aurait aucun sens.
   if (!PAIEMENTS.length) return null;
@@ -315,6 +352,23 @@ export function MoyensDePaiement({ total = 0 }) {
       <p className="text-[10px] uppercase tracking-wider mb-2" style={{ color: texteDoux, fontFamily: CORPS }}>
         Paiement accepté
       </p>
+
+      {/* Le montant et la référence, en gros et au même endroit. C'est ce que
+          le client doit saisir là où rien ne le pré-remplit — et ce que le
+          vendeur retrouvera sur son relevé. */}
+      {total > 0 && (
+        <div className="rounded-lg px-3 py-2 mb-2" style={{ background: "#00000066", border: `1px solid ${jaune}44` }}>
+          <p className="text-[11px]" style={{ color: texteDoux, fontFamily: CORPS }}>
+            Montant à envoyer
+          </p>
+          <p style={{ fontFamily: TITRE, fontSize: 24, color: jaune, lineHeight: 1.1 }}>{euros(total)}</p>
+          {reference && (
+            <p className="text-[11px] mt-1" style={{ color: texte, fontFamily: CORPS }}>
+              Indique la référence <b style={{ color: jaune }}>{reference}</b> dans le message du paiement.
+            </p>
+          )}
+        </div>
+      )}
       <div className="flex flex-col gap-1.5">
         {PAIEMENTS.map((p) => (
           p.lien ? (
@@ -327,10 +381,17 @@ export function MoyensDePaiement({ total = 0 }) {
               style={{ background: CARTE, border: `1px solid ${vert}66`, textDecoration: "none" }}
             >
               <span style={{ fontSize: 15 }}>{p.emoji}</span>
-              <span className="flex-1 text-[12.5px] font-bold" style={{ color: texte, fontFamily: CORPS }}>
-                {p.nom}{p.note ? ` — ${p.note}` : ""}
+              <span className="flex-1 min-w-0" style={{ fontFamily: CORPS }}>
+                <span className="block text-[12.5px] font-bold" style={{ color: texte }}>
+                  {p.nom}{p.note ? ` — ${p.note}` : ""}
+                </span>
+                {p.consigne && (
+                  <span className="block text-[10.5px] mt-0.5" style={{ color: texteDoux }}>
+                    {p.consigne}
+                  </span>
+                )}
               </span>
-              <span className="text-[11px]" style={{ color: vert, fontFamily: CORPS }}>
+              <span className="text-[11px] flex-shrink-0" style={{ color: vert, fontFamily: CORPS }}>
                 {avecMontant(p.id, p.lien, total) !== p.lien ? `payer ${euros(total)} ↗` : "ouvrir ↗"}
               </span>
             </a>
@@ -357,7 +418,7 @@ export function MoyensDePaiement({ total = 0 }) {
   );
 }
 
-export function texteCommande(items) {
+export function texteCommande(items, reference = "") {
   const lignes = items.map(
     (i) => `• ${i.nom} — ${i.unite} (réf. ${i.ref}) x${i.qty} — ${euros(i.prix * i.qty)}`
   );
@@ -367,11 +428,13 @@ export function texteCommande(items) {
   const moyens = PAIEMENTS.length
     ? `\n\nPaiement accepté : ${PAIEMENTS.map((p) => p.nom).join(", ")}`
     : "";
-  return `${BOUTIQUE.accroche}\n\n${lignes.join("\n")}\n\nTotal : ${euros(cartTotal(items))}${moyens}`;
+  // La référence, pour que le vendeur rapproche un virement d'une commande.
+  const ref = reference ? `\n\nRéférence : ${reference}` : "";
+  return `${BOUTIQUE.accroche}\n\n${lignes.join("\n")}\n\nTotal : ${euros(cartTotal(items))}${ref}${moyens}`;
 }
 
-export function lienCommande(items) {
-  return MESSAGERIE.lien(CONTACT, texteCommande(items));
+export function lienCommande(items, reference = "") {
+  return MESSAGERIE.lien(CONTACT, texteCommande(items, reference));
 }
 
 // Copie déclenchée par le clic lui-même : la navigation continue normalement.
