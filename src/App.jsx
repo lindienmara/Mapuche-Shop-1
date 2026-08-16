@@ -23,6 +23,7 @@ import {
   CLE, PROPORTION_PHOTO, STYLE_PHOTO, FOND_IMAGE, COLONNE, CARTE, VOILE, FOND_PAGE,
   DEGRADE, TITRE, CORPS, INTRO, ANIMATIONS, telegram, euros, MESSAGERIES,
   MESSAGERIE, CONTACT, Photo, Video, Etiquette, Prix, BarreSection, Vedettes, RemonterEnHaut, MoyensDePaiement, referenceCommande, PEUT_COMMANDER,
+  AVIS, Carrousel,
   cartTotal, texteCommande, lienCommande, copierAvantDePartir,
   fond, fondCarte, bordure, texte, texteDoux, rose, violet, vert, jaune, cyan,
 } from "./commun.jsx";
@@ -331,6 +332,34 @@ function EcranLiens() {
 }
 
 function EcranAvis() {
+  /* Deux écrans en un, et le choix ne dépend que des données : s'il y a des
+     images d'avis, on les montre ; sinon on invite à en laisser un. Aucun avis
+     n'est écrit par la boutique — ce sont des captures de vraies
+     conversations. */
+  if (AVIS.length) {
+    return (
+      <>
+        <BarreSection titre="AVIS" />
+        <div className="px-3 mt-4 pb-4">
+          <p className="text-[12px] mb-3" style={{ color: texteDoux, fontFamily: CORPS, lineHeight: 1.55 }}>
+            De vrais messages de clients, en capture d'écran. Appuie sur une image pour la lire en grand.
+          </p>
+          <Carrousel images={AVIS} />
+          <a
+            href={MESSAGERIE.lien(CONTACT, "Bonjour, je souhaite laisser un avis sur ma commande :")}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={() => { if (!MESSAGERIE.prerempli) copierAvantDePartir("Bonjour, je souhaite laisser un avis sur ma commande :"); }}
+            className="flex items-center justify-center gap-2 mt-5 px-5 py-3 rounded-xl active:scale-95 transition-transform"
+            style={{ background: MESSAGERIE.couleur, color: MESSAGERIE.encre, fontFamily: TITRE, fontSize: 15, textDecoration: "none" }}
+          >
+            <MessageCircle size={16} /> DONNER MON AVIS
+          </a>
+        </div>
+      </>
+    );
+  }
+
   return (
     <>
       <BarreSection titre="AVIS" />

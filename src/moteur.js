@@ -10,7 +10,7 @@
 
 export const MOTEUR = {
   modele: "vitrine-3-niveaux",
-  version: "3.20",
+  version: "3.21",
   // Ce que sait faire cette version, pour information.
   capacites: [
     "familles > gammes > produits",
@@ -41,5 +41,6 @@ export const MOTEUR = {
     "reference de commande, pour rapprocher un virement d une commande",
     "le bouton d envoi dans la conversation peut etre eteint",
     "sans contact ni paiement, la boutique devient une vitrine sans panier",
+    "des avis en images : les captures de conversations defilent en carrousel",
   ],
 };

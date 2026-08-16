@@ -575,6 +575,173 @@ export function RemonterEnHaut({ articles = 0, seuil = 12 }) {
   );
 }
 
+/* ══════════ LES AVIS, EN IMAGES ══════════
+   Un avis recopié à la main ne prouve rien : n'importe qui peut écrire
+   « super vendeur ». Une capture d'écran de la conversation, elle, se voit.
+   C'est pourquoi les avis sont des IMAGES, montrées telles quelles — jamais
+   recadrées, jamais retouchées.
+
+   Elles défilent en carrousel : une à l'écran, on glisse pour la suivante. Une
+   capture de conversation est haute et étroite ; on la laisse donc entière dans
+   sa hauteur, quitte à ce qu'elle ne remplisse pas la largeur.
+
+   Un appui l'ouvre en grand : sur un téléphone, le texte d'une conversation
+   réduite à la largeur d'une carte est illisible. */
+export const AVIS = Array.isArray(BOUTIQUE.avis)
+  ? BOUTIQUE.avis.filter((a) => (a.image || "").trim())
+  : [];
+
+export function Carrousel({ images }) {
+  const [i, setI] = useState(0);
+  const [plein, setPlein] = useState(false);
+  const doigtX = useRef(null);
+
+  const n = images.length;
+  const suivante = () => setI((k) => (k + 1) % n);
+  const precedente = () => setI((k) => (k - 1 + n) % n);
+
+  // Une image retirée pendant qu'on la regardait ne doit pas laisser un cadre
+  // vide : on revient sur la dernière existante.
+  useEffect(() => { if (i >= n) setI(0); }, [n, i]);
+
+  useEffect(() => {
+    if (!plein) return;
+    const touche = (e) => {
+      if (e.key === "Escape") setPlein(false);
+      else if (e.key === "ArrowRight" && n > 1) suivante();
+      else if (e.key === "ArrowLeft" && n > 1) precedente();
+    };
+    window.addEventListener("keydown", touche);
+    return () => window.removeEventListener("keydown", touche);
+  }, [plein, n]);
+
+  const debutGlisse = (e) => { doigtX.current = e.touches[0].clientX; };
+  const finGlisse = (e) => {
+    if (doigtX.current === null || n < 2) return;
+    const ecart = e.changedTouches[0].clientX - doigtX.current;
+    if (Math.abs(ecart) > 45) (ecart < 0 ? suivante : precedente)();
+    doigtX.current = null;
+  };
+
+  if (!n) return null;
+  const courant = images[Math.min(i, n - 1)];
+
+  const Fleche = ({ cote, onClick, children }) => (
+    <button
+      onClick={onClick}
+      aria-label={cote === "g" ? "Avis précédent" : "Avis suivant"}
+      className="absolute top-1/2 -translate-y-1/2 w-9 h-9 rounded-full flex items-center justify-center active:scale-90 transition-transform"
+      style={{
+        [cote === "g" ? "left" : "right"]: 8,
+        background: "#0C0C10D9", border: `1px solid ${bordure}`, color: texte,
+      }}
+    >
+      {children}
+    </button>
+  );
+
+  return (
+    <>
+      <div className="rounded-2xl overflow-hidden" style={{ background: CARTE, border: `1px solid ${bordure}` }}>
+        <div className="relative" onTouchStart={debutGlisse} onTouchEnd={finGlisse}>
+          <button
+            onClick={() => setPlein(true)}
+            className="block w-full"
+            style={{ background: "#08080C", lineHeight: 0 }}
+            aria-label="Voir cet avis en grand"
+          >
+            <img
+              src={courant.image}
+              alt={courant.legende || "Avis d'un client"}
+              className="w-full object-contain"
+              style={{ maxHeight: "62vh" }}
+            />
+          </button>
+
+          {n > 1 && (
+            <>
+              <Fleche cote="g" onClick={precedente}><ChevronLeft size={18} /></Fleche>
+              <Fleche cote="d" onClick={suivante}><ChevronRight size={18} /></Fleche>
+              <span
+                className="absolute top-2 right-2 px-2 py-1 rounded-lg text-[11px] font-bold"
+                style={{ background: "#0C0C10D9", color: texteDoux, border: `1px solid ${bordure}`, fontFamily: CORPS }}
+              >
+                {i + 1} / {n}
+              </span>
+            </>
+          )}
+
+          <span
+            className="absolute bottom-2 right-2 w-8 h-8 rounded-full flex items-center justify-center"
+            style={{ background: "#0C0C10D9", border: `1px solid ${bordure}`, color: texteDoux }}
+          >
+            <Maximize2 size={14} />
+          </span>
+        </div>
+
+        {courant.legende ? (
+          <p className="px-3 py-2.5 text-[12.5px]" style={{ color: texteDoux, fontFamily: CORPS, lineHeight: 1.5 }}>
+            {courant.legende}
+          </p>
+        ) : null}
+      </div>
+
+      {/* Les pastilles : elles disent combien il y en a, et où l'on en est. */}
+      {n > 1 && (
+        <div className="flex items-center justify-center gap-1.5 mt-3 flex-wrap">
+          {images.map((a, k) => (
+            <button
+              key={k}
+              onClick={() => setI(k)}
+              aria-label={`Avis ${k + 1}`}
+              className="rounded-full transition-all"
+              style={{
+                width: k === i ? 22 : 7, height: 7,
+                background: k === i ? jaune : bordure,
+              }}
+            />
+          ))}
+        </div>
+      )}
+
+      {plein && (
+        <div className="fixed inset-0 z-50 flex flex-col" style={{ background: "rgba(0,0,0,.97)" }}>
+          <div className="flex items-center gap-2 px-3 pt-3 pb-2 flex-shrink-0">
+            <p className="flex-1 truncate" style={{ fontFamily: TITRE, fontSize: 17, color: texte }}>
+              AVIS {i + 1} / {n}
+            </p>
+            <button
+              onClick={() => setPlein(false)}
+              className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0"
+              style={{ background: "#1A1A1ACC", border: `1px solid ${bordure}` }}
+              aria-label="Fermer"
+            >
+              <X size={17} color={texte} />
+            </button>
+          </div>
+          <div className="relative flex-1 min-h-0 flex items-center justify-center px-3"
+            onTouchStart={debutGlisse} onTouchEnd={finGlisse}>
+            <img src={courant.image} alt={courant.legende || "Avis d'un client"}
+              className="max-w-full max-h-full object-contain rounded-xl" />
+            {n > 1 && (
+              <>
+                <Fleche cote="g" onClick={precedente}><ChevronLeft size={18} /></Fleche>
+                <Fleche cote="d" onClick={suivante}><ChevronRight size={18} /></Fleche>
+              </>
+            )}
+          </div>
+          {courant.legende ? (
+            <p className="px-4 pb-4 pt-2 text-center text-[13px] flex-shrink-0"
+              style={{ color: texteDoux, fontFamily: CORPS }}>
+              {courant.legende}
+            </p>
+          ) : null}
+        </div>
+      )}
+    </>
+  );
+}
+
 /* ══════════ TOUTES LES FAMILLES ══════════
    Une rangée de pastilles qui défile de côté cache ce qui dépasse de l'écran :
    passé la troisième famille, le client ne sait même pas que les autres
