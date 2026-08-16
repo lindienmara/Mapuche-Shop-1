@@ -1,7 +1,7 @@
 // CATALOGUE — TROIS NIVEAUX
 // -------------------------
 // FAMILLE  →  GAMME  →  PRODUIT
-// Fichier produit par l'atelier : 
+// Fichier produit par l'atelier : file://
 
 export const FAMILLES = [
   {
@@ -335,18 +335,6 @@ export const FAMILLES = [
             description: "Quelle est sa fonction principale ?\nLa fonction de cet appareil est d'offrir ce que l'image décrit comme \"L'expérience d'écoute personnelle à son apogée\". Il sert à écouter de la musique, regarder des films ou passer des appels avec une qualité sonore de très haute fidélité, tout en permettant à l'utilisateur de s'isoler totalement des bruits de son environnement grâce à des technologies d'annulation du son." },
         ],
       },
-    ],
-  },
-  {
-    id: "vetements-chaussures",
-    nom: "VÊTEMENTS/CHAUSSURES ",
-    emoji: "👟",
-    glyphe: "boite",
-    image: "",
-    type: "produits",
-    couleurs: ["#FF1B8D", "#7B2FF7"],
-    gammes: [
-
     ],
   },
 ];

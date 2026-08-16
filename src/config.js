@@ -49,7 +49,7 @@ export const BOUTIQUE = {
 
   // Envoyer la commande dans une conversation. Mets false pour une boutique
   // qui ne fonctionne qu'au paiement en ligne.
-  commandeActive: true,
+  commandeActive: false,
 
   // Ouverture de la boutique, jouée une fois par visite.
   // introVideo vide = titre animé, sans rien à charger.
