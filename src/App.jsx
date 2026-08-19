@@ -23,13 +23,14 @@ import {
   CLE, PROPORTION_PHOTO, STYLE_PHOTO, FOND_IMAGE, COLONNE, CARTE, VOILE, FOND_PAGE,
   DEGRADE, TITRE, CORPS, INTRO, ANIMATIONS, telegram, euros, MESSAGERIES,
   MESSAGERIE, CONTACT, Photo, Video, Etiquette, Prix, BarreSection, Vedettes, RemonterEnHaut, MoyensDePaiement, referenceCommande, PEUT_COMMANDER,
-  AVIS, Carrousel,
+  AVIS, Carrousel, CHOIX, ChoixEtCommande, CadreVideo,
   cartTotal, texteCommande, lienCommande, copierAvantDePartir,
   fond, fondCarte, bordure, texte, texteDoux, rose, violet, vert, jaune, cyan,
 } from "./commun.jsx";
 import { EcranFamilles } from "./type-familles.jsx";
 import { EcranListe } from "./type-liste.jsx";
 import { EcranLuxe } from "./type-luxe.jsx";
+import { EcranMarques, EcranCarrousel } from "./type-marques.jsx";
 /* Une famille sans aucune gamme ouvrait un ecran entierement vide : le titre,
    puis rien. Vu du visiteur — et de qui tient la boutique — le bouton semble
    simplement ne pas marcher, alors qu'il a parfaitement fonctionne. On ne
@@ -164,17 +165,43 @@ function EcranProduits({ famille, gamme, onProduit, onRetour }) {
   );
 }
 
+/* Dans une galerie de vidéos, la vignette EST la vidéo : sa première image
+   s'affiche au lieu du dessin de remplacement. Elle ne se lance pas — dix
+   vidéos qui démarreraient ensemble videraient le forfait du visiteur. Elle se
+   charge juste assez pour se montrer, et l'appui ouvre le plein écran. */
+function VignetteVideo({ produit, famille, source, className }) {
+  return (
+    <Video
+      source={produit.video}
+      nom={produit.nom}
+      muet
+      auto={false}
+      controles={false}
+      className={className}
+      style={STYLE_PHOTO(produit)}
+      secours={
+        <Photo produit={produit} secours={SECOURS(produit, famille)} source={source} alt={produit.nom} className={className} />
+      }
+    />
+  );
+}
+
 function EcranFiche({ famille, gamme, produit, onRetour, onAjouter, onOuvrir, onVideo }) {
-  const [qte, setQte] = useState(1);
   const image = visuelProduit(produit, famille.couleurs, famille.glyphe);
   const photos = GALERIE(produit);
-  const aPlus = photos.length > 1 || !!(produit.description || "").trim() || !!(produit.video || "").trim();
+  const aVideo = !!(produit.video || "").trim();
+  const aPhoto = photos.length > 0;
+  const aPlus = photos.length > 1 || !!(produit.description || "").trim() || aVideo;
 
   return (
     <>
       <BarreSection titre={produit.nom} onRetour={onRetour} />
 
       <div className="px-3 mt-3">
+        {/* Pas de photo, mais un film : le film prend simplement sa place. */}
+        {aVideo && !aPhoto ? (
+          <CadreVideo produit={produit} couleur={famille.couleurs[0]} onPleinEcran={onVideo} />
+        ) : (
         <button
           onClick={() => onOuvrir(produit)}
           className="relative w-full rounded-2xl overflow-hidden block"
@@ -199,6 +226,7 @@ function EcranFiche({ famille, gamme, produit, onRetour, onAjouter, onOuvrir, on
             <span className="absolute top-3 left-3"><Etiquette couleur="#888">Épuisé</Etiquette></span>
           )}
         </button>
+        )}
 
         {photos.length > 1 && (
           <div className="flex gap-2 mt-2 overflow-x-auto pb-1" style={{ scrollbarWidth: "none" }}>
@@ -216,17 +244,12 @@ function EcranFiche({ famille, gamme, produit, onRetour, onAjouter, onOuvrir, on
           </div>
         )}
 
-        {produit.video && (
-          <button
-            onClick={() => onVideo(produit)}
-            className="w-full mt-3 py-3 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
-            style={{ background: CARTE, border: `2px solid ${cyan}`, boxShadow: `0 0 16px ${cyan}33` }}
-          >
-            <PlayCircle size={20} color={cyan} />
-            <span style={{ fontFamily: TITRE, fontSize: 16, color: cyan, letterSpacing: ".5px" }}>
-              VOIR LA VIDÉO
-            </span>
-          </button>
+        {/* Des photos ET un film : le film se déroule juste dessous, déjà
+            lancé, au lieu d'attendre derrière un bouton. */}
+        {aVideo && aPhoto && (
+          <div className="mt-3">
+            <CadreVideo produit={produit} couleur={famille.couleurs[0]} onPleinEcran={onVideo} />
+          </div>
         )}
       </div>
 
@@ -241,44 +264,16 @@ function EcranFiche({ famille, gamme, produit, onRetour, onAjouter, onOuvrir, on
           {produit.description}
         </p>
 
-        <div className="mt-5 rounded-2xl p-4" style={{ background: CARTE, border: `1px solid ${bordure}` }}>
-          <div className="flex items-end justify-between">
-            <div>
-              <p className="text-[11px] uppercase tracking-wider" style={{ color: texteDoux, fontFamily: CORPS }}>Prix</p>
-              <Prix valeur={produit.prix} taille={32} />
-              <p className="text-[12px]" style={{ color: texteDoux, fontFamily: CORPS }}>{produit.unite}</p>
-            </div>
-            <div>
-              <p className="text-[11px] uppercase tracking-wider mb-1 text-right" style={{ color: texteDoux, fontFamily: CORPS }}>Quantité</p>
-              <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: VOILE(fond, "CC"), border: `1px solid ${bordure}` }}>
-                <button onClick={() => setQte((q) => Math.max(1, q - 1))} className="w-8 h-8 rounded-lg flex items-center justify-center active:scale-90" aria-label="Moins">
-                  <Minus size={14} color={texte} />
-                </button>
-                <span className="w-7 text-center font-bold" style={{ color: texte, fontFamily: CORPS }}>{qte}</span>
-                <button onClick={() => setQte((q) => q + 1)} className="w-8 h-8 rounded-lg flex items-center justify-center active:scale-90" aria-label="Plus">
-                  <Plus size={14} color={texte} />
-                </button>
-              </div>
-            </div>
-          </div>
+        {/* LA TAILLE, LA COULEUR, LE PRIX ET LE PANIER.
+            Ce sont les deux questions qu'on pose en magasin avant toute autre,
+            et les deux qui font renoncer quand la réponse manque. Elles vivent
+            ici, sur la fiche commune : une boutique de chaussures en a besoin,
+            mais une boutique de vêtements ou de vaisselle aussi.
 
-          {/* Vitrine : aucun chemin pour commander, donc aucun bouton qui le
-              laisserait croire. Le prix et la fiche restent. */}
-          {!PEUT_COMMANDER ? null : produit.dispo ? (
-            <button
-              onClick={() => onAjouter(produit, qte)}
-              className="w-full mt-4 py-3.5 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
-              style={{ backgroundImage: DEGRADE, color: "#fff", fontFamily: TITRE, fontSize: 17, letterSpacing: ".5px" }}
-            >
-              <Plus size={18} /> AJOUTER AU PANIER · {euros(produit.prix * qte)}
-            </button>
-          ) : (
-            <p className="w-full mt-4 py-3.5 rounded-xl text-center text-[13px] font-bold"
-              style={{ background: VOILE("#262626", "D9"), color: texteDoux, border: `1px solid ${bordure}` }}>
-              Bientôt de retour
-            </p>
-          )}
-        </div>
+            Rien ne s'affiche si le vendeur n'a rien écrit — pas de ligne vide,
+            pas de « non renseigné ». Une boutique d'épicerie ne verra jamais
+            ces deux lignes. */}
+        <ChoixEtCommande produit={produit} onAjouter={onAjouter} />
       </div>
     </>
   );
@@ -401,16 +396,62 @@ function Intro({ onFini }) {
       onClick={fermer}
     >
       {INTRO.video ? (
-        <video
-          src={INTRO.video}
-          autoPlay
-          muted
-          playsInline
-          onEnded={fermer}
-          onError={fermer}
-          className="max-w-full max-h-[76vh] rounded-2xl"
-          style={{ border: `2px solid ${rose}`, boxShadow: `0 0 40px ${rose}55` }}
-        />
+        /* LE TITRE PAR-DESSUS LA VIDÉO.
+
+           Le texte d'ouverture n'apparaissait que faute de vidéo : dès qu'on en
+           mettait une, le nom de la boutique disparaissait. Or c'est justement
+           là qu'il sert — trois secondes d'images, et rien pour dire chez qui
+           on vient d'entrer.
+
+           Il se pose donc SUR la vidéo, au centre, sur un voile sombre. Le
+           voile n'est pas une décoration : un titre clair sur des images
+           claires ne se lit pas, et une vidéo change d'image vingt-cinq fois
+           par seconde. Le voile est le seul moyen de tenir la lisibilité sans
+           connaître le film.
+
+           « pointer-events-none » : le doigt traverse le texte et atteint le
+           fond, qui referme l'ouverture. Sans cela, taper sur le titre — le
+           plus gros élément de l'écran — ne ferait rien. */
+        <div className="relative">
+          <video
+            src={INTRO.video}
+            autoPlay
+            muted
+            playsInline
+            onEnded={fermer}
+            onError={fermer}
+            className="block max-w-full max-h-[76vh] rounded-2xl"
+            style={{ border: `2px solid ${rose}`, boxShadow: `0 0 40px ${rose}55` }}
+          />
+          {INTRO.texte && (
+            <div
+              className="absolute inset-0 flex items-center justify-center px-5 rounded-2xl pointer-events-none"
+              style={{
+                /* Le voile est le plus sombre AU CENTRE, là où le titre se pose.
+                   Un dégradé du bas vers le haut, comme sur les tuiles de marque,
+                   laissait justement le milieu de l'image en clair : le texte y
+                   tombait sur la partie la moins couverte. */
+                background: "radial-gradient(ellipse at center, rgba(0,0,0,.66) 0%, rgba(0,0,0,.44) 58%, rgba(0,0,0,.58) 100%)",
+                /* L'ombre est portée par le cadre, non par le texte : les
+                   lettres sont transparentes — c'est le dégradé qui se voit à
+                   travers — et une ombre de texte n'aurait rien à assombrir. */
+                filter: "drop-shadow(0 2px 14px rgba(0,0,0,.9))",
+              }}
+            >
+              <p
+                className="atelier-anime text-center"
+                style={{
+                  fontFamily: TITRE, fontSize: "clamp(26px, 8.5vw, 54px)", lineHeight: 1.02,
+                  backgroundImage: DEGRADE, WebkitBackgroundClip: "text", backgroundClip: "text",
+                  color: "transparent",
+                  animation: "atelier-apparition .8s cubic-bezier(.2,.9,.2,1) both, atelier-lueur 2.4s ease-in-out .8s infinite",
+                }}
+              >
+                {INTRO.texte}
+              </p>
+            </div>
+          )}
+        </div>
       ) : (
         <>
           <p
@@ -445,14 +486,17 @@ function Intro({ onFini }) {
 // l'une après l'autre, son descriptif, et sa vidéo s'il en a une. Chaque partie
 // n'apparaît que si elle existe.
 function Visionneuse({ produit, famille, depart = 0, onFermer }) {
-  const [i, setI] = useState(depart);
-  const [surVideo, setSurVideo] = useState(false);
-  const doigtX = useRef(null);
-
   const photos = GALERIE(produit);
   const affichees = photos.length ? photos : [visuelProduit(produit, famille.couleurs, famille.glyphe)];
   const plusieurs = affichees.length > 1;
   const aVideo = !!(produit.video || "").trim();
+
+  const [i, setI] = useState(depart);
+  // Un produit filmé et non photographié s'ouvre directement sur son film :
+  // sinon la visionneuse s'ouvrait sur le dessin de remplacement, et il fallait
+  // encore un bouton pour atteindre la seule vraie image du produit.
+  const [surVideo, setSurVideo] = useState(aVideo && photos.length === 0);
+  const doigtX = useRef(null);
 
   const suivante = () => setI((n) => (n + 1) % affichees.length);
   const precedente = () => setI((n) => (n - 1 + affichees.length) % affichees.length);
@@ -589,7 +633,11 @@ function EcranVideos({ famille, onRetour, onVideo }) {
                       opacity: jouable ? 1 : 0.55,
                     }}
                   >
-                    <Photo produit={p} secours={SECOURS(p, famille)} source={affiche} alt={p.nom} className="w-full block" />
+                    {jouable ? (
+                      <VignetteVideo produit={p} famille={famille} source={affiche} className="w-full block" />
+                    ) : (
+                      <Photo produit={p} secours={SECOURS(p, famille)} source={affiche} alt={p.nom} className="w-full block" />
+                    )}
                     {jouable && (
                       <span className="absolute inset-0 flex items-center justify-center">
                         <span
@@ -656,11 +704,16 @@ export default function Boutique() {
 
   const nbArticles = panier.reduce((s, i) => s + i.qty, 0);
 
-  const ajouter = (p, qte) => {
+/* Deux pointures du même modèle sont DEUX lignes de commande, pas une.
+     C'est pourquoi l'article est reconnu par sa référence ET par la taille et
+     la couleur choisies : sans cela, commander un 42 après un 40 remplacerait
+     silencieusement le premier, et le vendeur enverrait deux fois la même
+     paire. Un client qui ne choisit rien retombe sur l'ancien comportement. */
+  const ajouter = (p, qte, taille = "", couleur = "") => {
+    const meme = (i) => i.ref === p.ref && (i.taille || "") === taille && (i.couleur || "") === couleur;
     setPanier((actuel) => {
-      const existe = actuel.find((i) => i.ref === p.ref);
-      if (existe) return actuel.map((i) => (i.ref === p.ref ? { ...i, qty: i.qty + qte } : i));
-      return [...actuel, { ref: p.ref, nom: p.nom, unite: p.unite, prix: p.prix, qty: qte }];
+      if (actuel.find(meme)) return actuel.map((i) => (meme(i) ? { ...i, qty: i.qty + qte } : i));
+      return [...actuel, { ref: p.ref, nom: p.nom, unite: p.unite, prix: p.prix, qty: qte, taille, couleur }];
     });
     setPanierOuvert(true);
   };
@@ -783,10 +836,14 @@ export default function Boutique() {
               <EcranVideos famille={famille} onRetour={retour} onVideo={setVideo} />
             ) : produit ? (
               <EcranFiche famille={famille} gamme={gamme} produit={produit} onRetour={retour} onAjouter={ajouter} onOuvrir={(p, n) => setVue({ produit: p, depart: n || 0 })} onVideo={setVideo} />
+            ) : famille && PRESENTATION === "marques" ? (
+              <EcranCarrousel famille={famille} onAjouter={ajouter} onRetour={retour} />
             ) : famille ? (
               <EcranProduits famille={famille} gamme={gamme} onProduit={allerProduit} onRetour={retour} />
             ) : PRESENTATION === "liste" ? (
               <EcranListe onProduit={allerProduit} onFamille={choisirFamille} />
+            ) : PRESENTATION === "marques" ? (
+              <EcranMarques onFamille={choisirFamille} />
             ) : PRESENTATION === "luxe" ? (
               <EcranLuxe onFamille={choisirFamille} onProduit={allerProduit} />
             ) : (

@@ -10,7 +10,7 @@
 
 export const MOTEUR = {
   modele: "vitrine-3-niveaux",
-  version: "3.22",
+  version: "3.31",
   // Ce que sait faire cette version, pour information.
   capacites: [
     "familles > gammes > produits",
@@ -44,5 +44,18 @@ export const MOTEUR = {
     "des avis en images : les captures de conversations defilent en carrousel",
     "le client ne depose plus d avis lui-meme : le vendeur seul les publie",
     "sans moyen d etre contacte, aucun lien vers la messagerie nulle part",
+    "quatre types de boutique : familles, liste, La Maison, ou par marques",
+    "type par marques : une grande photo par marque, puis un carrousel page a page",
+    "taille et couleur sur la fiche produit, affichees seulement si renseignees",
+    "la taille et la couleur se choisissent au doigt et partent avec la commande",
+    "les pointures en rupture sont barrees, visibles mais pas commandables",
+    "les photos de marque prennent la meme forme que les photos de produit",
+    "une marque peut avoir une video qui tourne a la place de sa photo",
+    "chaque marque occupe tout l ecran du telephone, une marque a la fois",
+    "les modeles d une marque en vignettes : on voit les couleurs et on choisit",
+    "les tailles se lisent quelle que soit la facon de les ecrire : points, virgules, espaces",
+    "type par marques : photo en haut, tailles et prix dessous, dans une colonne",
+    "la video d un produit se joue a meme la fiche, a la place de la photo",
+    "une famille entiere peut passer en rupture, sans etre supprimee",
   ],
 };

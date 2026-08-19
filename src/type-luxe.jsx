@@ -19,7 +19,7 @@ import React from "react";
 import { ChevronRight, PlayCircle } from "lucide-react";
 import { visuelProduit } from "./visuels.js";
 import {
-  BOUTIQUE, FAMILLES, TOUS_PRODUITS, VEDETTES, SELECTION_CHEF, EST_VIDEOS,
+  BOUTIQUE, FAMILLES, TOUS_PRODUITS, VEDETTES, SELECTION_CHEF, EST_VIDEOS, EN_RUPTURE,
   SECOURS, AJUSTEMENT, GALERIE, Photo, CORPS, euros, bordure, texte, texteDoux, jaune,
 } from "./commun.jsx";
 
@@ -165,6 +165,12 @@ function Collection({ famille, onFamille }) {
         {famille.nom}
       </span>
       {EST_VIDEOS(famille) && <PlayCircle size={13} color={jaune} />}
+      {/* Rayon fermé : on le dit sur la ligne, avant d'y entrer. */}
+      {EN_RUPTURE(famille) && (
+        <span style={{ fontFamily: CORPS, fontSize: 10, fontWeight: 700, color: texteDoux, letterSpacing: ".12em" }}>
+          ÉPUISÉ
+        </span>
+      )}
       <ChevronRight size={15} color={texteDoux} />
     </button>
   );

@@ -13,7 +13,7 @@ import React from "react";
 import { Star, PlayCircle } from "lucide-react";
 import { visuelFamille } from "./visuels.js";
 import {
-  BOUTIQUE, FAMILLES, SELECTION_CHEF, EST_VIDEOS, Vedettes, Prix,
+  BOUTIQUE, FAMILLES, SELECTION_CHEF, EST_VIDEOS, EN_RUPTURE, Vedettes, Prix,
   VOILE, CARTE, TITRE, CORPS, bordure, texte, texteDoux, jaune, cyan,
 } from "./commun.jsx";
 
@@ -72,6 +72,19 @@ export function EcranFamilles({ onFamille, onProduit }) {
                     <PlayCircle size={13} color={cyan} />
                     <span style={{ fontFamily: CORPS, fontSize: 9.5, fontWeight: 800, color: cyan, letterSpacing: ".1em" }}>
                       VIDÉOS
+                    </span>
+                  </span>
+                )}
+                {/* Rayon fermé : on le dit sur la porte, pas seulement une fois
+                    entré. Le rayon s'ouvre quand même — on vient souvent voir
+                    ce qui reviendra. */}
+                {EN_RUPTURE(f) && (
+                  <span
+                    className="absolute top-2 left-2 px-2 py-1 rounded-lg"
+                    style={{ background: "#000000C8", border: `1px solid #8A8A8A` }}
+                  >
+                    <span style={{ fontFamily: CORPS, fontSize: 9.5, fontWeight: 800, color: "#D8D8D8", letterSpacing: ".1em" }}>
+                      ÉPUISÉ
                     </span>
                   </span>
                 )}

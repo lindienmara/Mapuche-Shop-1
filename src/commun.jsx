@@ -42,7 +42,32 @@ function brouillon() {
 export const APERCU = brouillon();
 export const BOUTIQUE = APERCU ? { ...BOUTIQUE_PUBLIEE, ...APERCU.BOUTIQUE } : BOUTIQUE_PUBLIEE;
 export const COULEURS = APERCU ? { ...COULEURS_PUBLIEES, ...APERCU.COULEURS } : COULEURS_PUBLIEES;
-export const FAMILLES = APERCU ? APERCU.FAMILLES : FAMILLES_PUBLIEES;
+/* ───────────── UN RAYON PEUT FERMER SANS DISPARAÎTRE ─────────────
+   Le fournisseur n'a pas livré, la saison est finie, le vendeur s'absente une
+   semaine. Jusqu'ici la seule sortie était de SUPPRIMER la famille — et avec
+   elle ses articles, ses prix, ses photos et ses descriptions, tout à
+   ressaisir au retour. Personne ne devrait avoir à détruire son rayon pour
+   dire « pas cette semaine ».
+
+   Une famille porte donc un interrupteur, « dispo ». Fermée, elle reste
+   visible et se visite : le client voit ce qui existe, comprend que ce n'est
+   pas commandable aujourd'hui, et revient. Un seul geste la rouvre, intacte.
+
+   Le réglage est appliqué ICI, une seule fois, en marquant chaque article
+   épuisé. Tout le reste de la boutique — étiquettes, panier, bouton de
+   commande, vedettes — sait déjà traiter un article épuisé : aucun écran n'a à
+   connaître la notion de rayon fermé. */
+export const EN_RUPTURE = (f) => !!f && f.dispo === false;
+
+const RAYON_FERME = (f) => (!EN_RUPTURE(f) ? f : {
+  ...f,
+  gammes: (f.gammes || []).map((g) => ({
+    ...g,
+    produits: (g.produits || []).map((p) => ({ ...p, dispo: false })),
+  })),
+});
+
+export const FAMILLES = (APERCU ? APERCU.FAMILLES : FAMILLES_PUBLIEES).map(RAYON_FERME);
 
 // Une famille peut être une galerie de vidéos au lieu d'un rayon de produits.
 // Elle se place où on veut dans la liste, et rien ne s'y achète : ni prix, ni
@@ -88,7 +113,7 @@ export const VEDETTES = TOUS_PRODUITS.filter((p) => p.vedette).slice(0, 8);
 // Le dessin de secours d un produit : le meme visuel, sans sa photo.
 export const SECOURS = (p, famille) => visuelProduit({ ...p, image: "", images: [] }, famille.couleurs, famille.glyphe);
 
-export const PRESENTATION = ["liste", "luxe"].includes(BOUTIQUE.presentation)
+export const PRESENTATION = ["liste", "luxe", "marques"].includes(BOUTIQUE.presentation)
   ? BOUTIQUE.presentation : "familles";
 
 // Cadrage des photos. « carre » remplit le cadre quitte à couper les bords,
@@ -418,10 +443,54 @@ export function MoyensDePaiement({ total = 0, reference = "" }) {
   );
 }
 
+/* DÉCOUPER UNE LISTE ÉCRITE À LA MAIN.
+   Le vendeur tape « 39 · 40 · 41 », ou « 39, 40, 41 », ou « 39/40/41 », ou
+   « 39 40 41 » — et il a raison à chaque fois. C'est au logiciel de s'adapter,
+   pas au vendeur d'apprendre une syntaxe.
+
+   On coupe donc sur tout ce qui sépare visiblement, et on garde l'ordre écrit :
+   une pointure se lit de la plus petite à la plus grande, et le vendeur l'a
+   déjà rangée ainsi. */
+/* DÉCOUPER UNE LISTE ÉCRITE À LA MAIN.
+
+   Le vendeur écrit ses tailles comme il les dit. Vu en vrai dans une vraie
+   boutique : « 39. 40. 42. 43 » — avec des points. Ailleurs : « 39, 40 »,
+   « 39 · 40 », « 39/40 », ou simplement « 39 40 41 ». Toutes ces façons sont
+   justes. C'est au logiciel de s'adapter, pas au vendeur d'apprendre une
+   syntaxe qu'il n'a pas demandée.
+
+   DEUX PIÈGES, et ils tirent en sens contraire.
+
+   1. La virgule et le point séparent — mais ils marquent AUSSI la demi-
+      pointure : « 38,5 », « 38.5 ». Pris pour des séparateurs, « 38,5 »
+      devenait deux tailles, « 38 » et « 5 » : un 5 pour homme. Une demi-
+      pointure s'écrivant toujours « ,5 » ou « .5 », on met celles-là à l'abri
+      le temps de découper.
+
+   2. L'espace sépare — mais pas toujours : « 8 US » est UNE taille en deux
+      mots. On ne coupe donc sur les espaces que si TOUT le morceau est fait de
+      nombres séparés par des espaces. « 39 40 41 » se coupe, « 8 US » reste
+      entier. */
+const DECIMALE = "\u0000";
+const QUE_DES_NOMBRES = /^\d+(?:[.,]\d)?(?:\s+\d+(?:[.,]\d)?)+$/;
+
+export const CHOIX = (texte) =>
+  String(texte || "")
+    .replace(/(\d)([.,])(5)(?!\d)/g, "$1" + DECIMALE + "$3")
+    .split(/[·,;|\/\n.]+/)
+    .flatMap((x) => {
+      const morceau = x.split(DECIMALE).join(",").trim();
+      return QUE_DES_NOMBRES.test(morceau) ? morceau.split(/\s+/) : [morceau];
+    })
+    .filter(Boolean);
+
 export function texteCommande(items, reference = "") {
-  const lignes = items.map(
-    (i) => `• ${i.nom} — ${i.unite} (réf. ${i.ref}) x${i.qty} — ${euros(i.prix * i.qty)}`
-  );
+  const lignes = items.map((i) => {
+    // La taille et la couleur choisies partent AVEC la commande. Sans elles,
+    // le vendeur doit rappeler chaque client pour les lui demander.
+    const precisions = [i.taille, i.couleur].filter(Boolean).join(", ");
+    return `• ${i.nom}${precisions ? " (" + precisions + ")" : ""} — ${i.unite} (réf. ${i.ref}) x${i.qty} — ${euros(i.prix * i.qty)}`;
+  });
   // Le moyen de paiement voyage avec la commande : le client garde une trace
   // de ce qui a été annoncé, et toi aussi. Aucun lien n'est recopié ici — un
   // lien de paiement se clique sur la boutique, pas dans une conversation.
@@ -448,9 +517,33 @@ export function copierAvantDePartir(texte) {
    Une vidéo qui ne se charge pas ne doit pas laisser un rectangle noir muet :
    dans neuf cas sur dix le fichier n'a simplement pas été déposé dans
    public/videos, et personne ne peut le deviner. Le lecteur le dit. */
-export function Video({ source, nom, className, style }) {
+export function Video({
+  source, nom, className, style,
+  muet = false, boucle = false, auto = true, controles = true, secours = null,
+}) {
   const [erreur, setErreur] = useState(false);
+  const lecteur = useRef(null);
 
+  /* ★ POURQUOI « MUET » EST POSÉ À LA MAIN
+     Aucun navigateur ne lance tout seul une vidéo qui a du son : c'est une
+     règle, pas un réglage, et elle protège le visiteur. Muette, la même vidéo
+     démarre partout sans rien demander — et le son reste à un doigt, dans les
+     commandes du lecteur. Or React n'applique pas toujours l'attribut avant que
+     le navigateur ne prenne sa décision : on le pose donc nous-mêmes sur le
+     lecteur, juste avant de demander la lecture. */
+  useEffect(() => {
+    const v = lecteur.current;
+    if (!v) return;
+    v.muted = muet;
+    if (auto) {
+      const lecture = v.play();
+      if (lecture && lecture.catch) lecture.catch(() => {});
+    }
+  }, [source, muet, auto]);
+
+  // Une vignette a son propre dessin de secours : elle ne doit pas se changer
+  // en pavé d'explications au milieu d'une grille.
+  if (erreur && secours) return secours;
   if (erreur) {
     return (
       <div
@@ -471,17 +564,62 @@ export function Video({ source, nom, className, style }) {
 
   return (
     <video
+      ref={lecteur}
       src={source}
-      controls
-      autoPlay
+      controls={controles}
+      autoPlay={auto}
+      loop={boucle}
+      muted={muet}
       playsInline
-      preload="metadata"
+      preload={auto ? "auto" : "metadata"}
       onError={() => setErreur(true)}
       title={nom}
       className={className}
-      style={style}
-      onClick={(e) => e.stopPropagation()}
+      style={controles ? style : { ...style, pointerEvents: "none" }}
+      onClick={controles ? (e) => e.stopPropagation() : undefined}
     />
+  );
+}
+
+/* ───────────── UNE VIDÉO SE MONTRE, ELLE NE S'ANNONCE PAS ─────────────
+   Une vidéo de produit se cachait derrière un bouton « VOIR LA VIDÉO » : il
+   fallait un geste de plus pour voir ce que le vendeur avait filmé, et sur une
+   fiche sans photo il ne restait qu'un dessin de remplacement à la place de
+   l'article. La vidéo s'affiche donc à même la page, dans son cadre, et part
+   toute seule, en boucle, comme une vitrine.
+
+   Muette au départ : c'est la condition pour qu'un navigateur accepte de la
+   lancer sans qu'on le lui demande. Le son s'allume d'un doigt.
+
+   Ce cadre vit ici, dans le tronc commun, parce que TOUS les types de boutique
+   en ont besoin — la fiche partagée comme le carrousel des marques. */
+export function CadreVideo({ produit, couleur, onPleinEcran }) {
+  return (
+    <div
+      className="relative w-full rounded-2xl overflow-hidden"
+      style={{ border: `2px solid ${couleur || bordure}`, boxShadow: couleur ? `0 0 24px ${couleur}33` : "none", background: "#000" }}
+    >
+      <Video
+        source={produit.video}
+        nom={produit.nom}
+        muet
+        boucle
+        className="w-full block"
+        style={{ display: "block", width: "100%", maxHeight: "72vh" }}
+      />
+      {onPleinEcran && (
+        <button
+          onClick={() => onPleinEcran(produit)}
+          className="absolute top-3 right-3 flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[11px] font-semibold"
+          style={{ background: "#000000AA", color: texte, border: `1px solid ${bordure}` }}
+        >
+          <Maximize2 size={12} /> Plein écran
+        </button>
+      )}
+      {!produit.dispo && (
+        <span className="absolute top-3 left-3"><Etiquette couleur="#888">Épuisé</Etiquette></span>
+      )}
+    </div>
   );
 }
 
@@ -742,6 +880,155 @@ export function Carrousel({ images }) {
   );
 }
 
+/* ══════════ CHOISIR SA TAILLE, SA COULEUR, ET COMMANDER ══════════
+
+   Ce bloc vit dans le tronc commun parce que DEUX écrans s'en servent : la
+   fiche d'un produit, et le carrousel des boutiques par marques. Le recopier
+   dans les deux aurait été plus rapide à écrire, et la garantie qu'un jour
+   l'un des deux serait corrigé et pas l'autre.
+
+   Trois règles y sont tenues :
+
+     • RIEN N'EST PRÉSÉLECTIONNÉ. Choisir une pointure à la place du client,
+       c'est lui vendre une paire qu'il n'a pas demandée.
+
+     • UNE POINTURE EN RUPTURE RESTE VISIBLE, barrée. La masquer ferait croire
+       au client que le modèle ne se fait pas dans sa taille, et il partirait.
+       Barrée, il sait que c'est son modèle mais pas aujourd'hui, et il revient.
+
+     • SANS MOYEN DE COMMANDER, AUCUN BOUTON. Le prix et la fiche restent :
+       la boutique devient une vitrine, pas une boutique en panne. */
+export function ChoixEtCommande({ produit, onAjouter, compact = false }) {
+  const [qte, setQte] = useState(1);
+  const [taille, setTaille] = useState("");
+  const [couleur, setCouleur] = useState("");
+
+  const tailles = CHOIX(produit.tailles);
+  const teintes = CHOIX(produit.couleurs);
+  const epuisees = new Set(CHOIX(produit.taillesEpuisees));
+
+  // Changer de produit sans remettre les choix à zéro ferait partir un 42 pour
+  // un modèle qui ne se fait qu'en 38.
+  useEffect(() => { setTaille(""); setCouleur(""); setQte(1); }, [produit.ref, produit.nom]);
+  useEffect(() => { if (taille && epuisees.has(taille)) setTaille(""); }, [taille, produit.taillesEpuisees]);
+
+  const manque = (tailles.length && !taille) || (teintes.length && !couleur);
+
+  return (
+    <>
+      {(tailles.length > 0 || teintes.length > 0) && (
+        <div className={compact ? "" : "mt-5"}>
+          {tailles.length > 0 && (
+            <>
+              <p className="text-[11px] uppercase tracking-wider mb-2" style={{ color: texteDoux, fontFamily: CORPS }}>
+                Choisir la taille
+              </p>
+              <div className="grid grid-cols-3 gap-2">
+                {tailles.map((t) => {
+                  const partie = epuisees.has(t);
+                  return (
+                    <button
+                      key={t}
+                      onClick={() => { if (!partie) setTaille(taille === t ? "" : t); }}
+                      disabled={partie}
+                      aria-label={partie ? t + " — épuisée" : t}
+                      className="py-2.5 rounded-xl text-[14px] transition-transform"
+                      style={{
+                        background: taille === t ? texte : CARTE,
+                        color: partie ? texteDoux : taille === t ? "#0B0B0B" : texte,
+                        border: `1px solid ${taille === t ? texte : bordure}`,
+                        fontFamily: CORPS, fontWeight: taille === t ? 700 : 500,
+                        textDecoration: partie ? "line-through" : "none",
+                        opacity: partie ? 0.5 : 1,
+                        cursor: partie ? "default" : "pointer",
+                      }}
+                    >
+                      {t}
+                    </button>
+                  );
+                })}
+              </div>
+            </>
+          )}
+
+          {teintes.length > 0 && (
+            <>
+              <p className="text-[11px] uppercase tracking-wider mb-2"
+                style={{ color: texteDoux, fontFamily: CORPS, marginTop: tailles.length ? 16 : 0 }}>
+                Choisir la couleur
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {teintes.map((c) => (
+                  <button
+                    key={c}
+                    onClick={() => setCouleur(couleur === c ? "" : c)}
+                    className="px-4 py-2.5 rounded-xl text-[14px] active:scale-95 transition-transform"
+                    style={{
+                      background: couleur === c ? texte : CARTE,
+                      color: couleur === c ? "#0B0B0B" : texte,
+                      border: `1px solid ${couleur === c ? texte : bordure}`,
+                      fontFamily: CORPS, fontWeight: couleur === c ? 700 : 500,
+                    }}
+                  >
+                    {c}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      <div className="mt-5 rounded-2xl p-4" style={{ background: CARTE, border: `1px solid ${bordure}` }}>
+        <div className="flex items-end justify-between">
+          <div>
+            <p className="text-[11px] uppercase tracking-wider" style={{ color: texteDoux, fontFamily: CORPS }}>Prix</p>
+            <Prix valeur={produit.prix} taille={32} />
+            <p className="text-[12px]" style={{ color: texteDoux, fontFamily: CORPS }}>{produit.unite}</p>
+          </div>
+          <div>
+            <p className="text-[11px] uppercase tracking-wider mb-1 text-right" style={{ color: texteDoux, fontFamily: CORPS }}>Quantité</p>
+            <div className="flex items-center gap-1 rounded-xl p-1" style={{ background: VOILE(fond, "CC"), border: `1px solid ${bordure}` }}>
+              <button onClick={() => setQte((q) => Math.max(1, q - 1))} className="w-8 h-8 rounded-lg flex items-center justify-center active:scale-90" aria-label="Moins">
+                <Minus size={14} color={texte} />
+              </button>
+              <span className="w-7 text-center font-bold" style={{ color: texte, fontFamily: CORPS }}>{qte}</span>
+              <button onClick={() => setQte((q) => q + 1)} className="w-8 h-8 rounded-lg flex items-center justify-center active:scale-90" aria-label="Plus">
+                <Plus size={14} color={texte} />
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {!PEUT_COMMANDER ? null : produit.dispo ? (
+          <button
+            onClick={() => { if (!manque) onAjouter(produit, qte, taille, couleur); }}
+            disabled={manque}
+            className="w-full mt-4 py-3.5 rounded-xl flex items-center justify-center gap-2 active:scale-95 transition-transform"
+            style={{
+              backgroundImage: manque ? "none" : DEGRADE,
+              background: manque ? CARTE : undefined,
+              border: manque ? `1px solid ${bordure}` : "none",
+              color: manque ? texteDoux : "#fff",
+              fontFamily: TITRE, fontSize: 17, letterSpacing: ".5px",
+            }}
+          >
+            <Plus size={18} />
+            {manque
+              ? (tailles.length && !taille ? "CHOISIS TA TAILLE" : "CHOISIS TA COULEUR")
+              : `AJOUTER AU PANIER · ${euros(produit.prix * qte)}`}
+          </button>
+        ) : (
+          <p className="w-full mt-4 py-3.5 rounded-xl text-center text-[13px] font-bold"
+            style={{ background: VOILE("#262626", "D9"), color: texteDoux, border: `1px solid ${bordure}` }}>
+            Bientôt de retour
+          </p>
+        )}
+      </div>
+    </>
+  );
+}
+
 /* ══════════ TOUTES LES FAMILLES ══════════
    Une rangée de pastilles qui défile de côté cache ce qui dépasse de l'écran :
    passé la troisième famille, le client ne sait même pas que les autres
@@ -799,6 +1086,8 @@ export function ToutesLesFamilles({ familles, actif, onFamille, onTout, total, e
               </span>
               {EST_VIDEOS(f)
                 ? <PlayCircle size={13} color={cyan} />
+                : EN_RUPTURE(f)
+                ? <span style={{ color: texteDoux, fontWeight: 700, fontSize: 11 }}>ÉPUISÉ</span>
                 : <span style={{ color: texteDoux, fontWeight: 400, fontSize: 12 }}>{compte(f)} articles</span>}
             </button>
           ))}
