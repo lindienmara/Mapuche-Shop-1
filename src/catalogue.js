@@ -10,7 +10,9 @@ export const FAMILLES = [
     emoji: "🎬",
     glyphe: "etoile",
     image: "/produits/video-cellule.jpg",
+    video: "",
     type: "videos",
+    dispo: true,
     couleurs: ["#00E5FF", "#7B2FF7"],
     gammes: [
       {
@@ -77,7 +79,9 @@ export const FAMILLES = [
     emoji: "🔫",
     glyphe: "boite",
     image: "/produits/drapeaux.jpg",
+    video: "",
     type: "produits",
+    dispo: true,
     couleurs: ["#7B2FF7", "#FF1B8D"],
     gammes: [
       {
@@ -200,23 +204,23 @@ export const FAMILLES = [
           { ref: "REF-002", nom: "Audi RS Q3", unite: "la pièce", prix: 10, dispo: true, image: "/produits/audi-rs-q3.jpg" },
           { ref: "REF-003", nom: "Audi RS4", unite: "la pièce", prix: 10, dispo: false, image: "/produits/audi-rs4.jpg" },
           { ref: "REF-004", nom: "Audi RS5", unite: "la pièce", prix: 10, dispo: false, image: "/produits/audi-rs5.jpg" },
-          { ref: "REF-005", nom: "Audi RS6", unite: "la pièce", prix: 0, dispo: false, image: "/produits/audi-rs6.jpg" },
+          { ref: "REF-005", nom: "Audi RS6", unite: "la pièce", prix: 10, dispo: false, image: "/produits/audi-rs6.jpg" },
           { ref: "REF-006", nom: "BMW M3", unite: "la pièce", prix: 10, dispo: false, image: "/produits/bmw-m3.jpg" },
           { ref: "REF-007", nom: "BMW M5", unite: "la pièce", prix: 10, dispo: false, image: "/produits/bmw-m5.jpg" },
           { ref: "REF-008", nom: "BMW M8", unite: "la pièce", prix: 10, dispo: false, image: "/produits/bmw-m8.jpg" },
           { ref: "REF-009", nom: "BMW X6", unite: "la pièce", prix: 10, dispo: false, image: "/produits/bmw-x6.jpg" },
-          { ref: "REF-011", nom: "BMW M4", unite: "la pièce", prix: 10, dispo: true, image: "/produits/bmw-m4.jpg" },
+          { ref: "REF-011", nom: "BMW M4", unite: "la pièce", prix: 20, dispo: true, image: "/produits/bmw-m4.jpg" },
           { ref: "REF-013", nom: "Mercedes AMG GTS", unite: "la pièce", prix: 10, dispo: true, image: "/produits/mercedes-amg-gts.jpg" },
           { ref: "REF-014", nom: "Mercedes AMG GT", unite: "la pièce", prix: 10, dispo: false, image: "/produits/mercedes-amg-gt.jpg" },
-          { ref: "REF-015", nom: "Mercedes C63 jaune", unite: "la pièce", prix: 0, dispo: false, image: "/produits/mercedes-c63.jpg" },
-          { ref: "REF-016", nom: "Mercedes C63 Rouge ", unite: "la pièce", prix: 0, dispo: true, image: "/produits/mercedes-c63-rouge.jpg" },
+          { ref: "REF-015", nom: "Mercedes C63 jaune", unite: "la pièce", prix: 10, dispo: false, image: "/produits/mercedes-c63.jpg" },
+          { ref: "REF-016", nom: "Mercedes C63 Rouge ", unite: "la pièce", prix: 10, dispo: true, image: "/produits/mercedes-c63-rouge.jpg" },
           { ref: "REF-017", nom: "Mercedes G36", unite: "la pièce", prix: 10, dispo: false, image: "/produits/mercedes-g36.jpg" },
           { ref: "REF-018", nom: "Mercedes GLE", unite: "la pièce", prix: 10, dispo: true, image: "/produits/mercedes-gle.jpg" },
-          { ref: "REF-019", nom: "Audi RS3 Gris Bleu ", unite: "la pièce", prix: 10, dispo: true, image: "/produits/audi-rs3-gris-bleu.jpg" },
-          { ref: "REF-020", nom: "Audi RS4 Gris", unite: "la pièce", prix: 20.01, dispo: true, image: "/produits/audi-rs4-gris.jpg" },
+          { ref: "REF-019", nom: "Audi RS3 Gris Bleu ", unite: "la pièce", prix: 20, dispo: true, image: "/produits/audi-rs3-gris-bleu.jpg" },
+          { ref: "REF-020", nom: "Audi RS4 Gris", unite: "la pièce", prix: 20, dispo: true, image: "/produits/audi-rs4-gris.jpg" },
           { ref: "REF-021", nom: "Audi RS6 GT", unite: "la pièce", prix: 20, dispo: true, image: "/produits/audi-rs6-gt.jpg" },
           { ref: "REF-020", nom: "BMW-M3 E43 GTR", unite: "la pièce", prix: 20, dispo: true, image: "/produits/bmw-m3-e43-gtr.jpg" },
-          { ref: "REF-021", nom: "BMW-M5 Bleu Noire", unite: "la pièce", prix: 0, dispo: true, image: "/produits/bmw-m5-bleu-noire.jpg" },
+          { ref: "REF-021", nom: "BMW-M5 Bleu Noire", unite: "la pièce", prix: 20, dispo: true, image: "/produits/bmw-m5-bleu-noire.jpg" },
         ],
       },
       {
@@ -239,7 +243,9 @@ export const FAMILLES = [
     emoji: "🏖️",
     glyphe: "serviette",
     image: "/produits/serviettes-de-plage.jpg",
+    video: "",
     type: "produits",
+    dispo: true,
     couleurs: ["#F7C873", "#B8791A"],
     gammes: [
       {
@@ -274,7 +280,9 @@ export const FAMILLES = [
     emoji: "🛏️",
     glyphe: "housse",
     image: "/produits/housses-de-couette.jpg",
+    video: "",
     type: "produits",
+    dispo: true,
     couleurs: ["#7A1420", "#FB3640"],
     gammes: [
       {
@@ -307,7 +315,9 @@ export const FAMILLES = [
     emoji: "🔌",
     glyphe: "boite",
     image: "/produits/produit-electro.jpg",
+    video: "",
     type: "produits",
+    dispo: true,
     couleurs: ["#FF1B8D", "#7B2FF7"],
     gammes: [
       {
