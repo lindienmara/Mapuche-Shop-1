@@ -1,6 +1,6 @@
 // IDENTITÉ DE LA BOUTIQUE
 // -----------------------
-// Fichier produit par l'atelier : file://
+// Fichier produit par l'atelier : https://mes-boutiques-psi.vercel.app
 
 export const BOUTIQUE = {
   nom: "Mapuche-Shop-1",
