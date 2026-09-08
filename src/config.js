@@ -68,9 +68,9 @@ export const BOUTIQUE = {
     { titre: "Zone de livraison", texte: "Toutes la France " },
     { titre: "Délai de préparation", texte: "24/48H" },
     { titre: "Moyens de paiement", texte: "PCS/Virement /PayPal " },
-    { titre: "Dimension", texte: "Drapeau 🚩 ", mesures: [{ nom: "Taille", valeur: "90 x 150 cm" }, { nom: "Poids", valeur: "100 g" }] },
-    { titre: "Dimension", texte: "Serviette", mesures: [{ nom: "Taille", valeur: "70 x 140 cm" }, { nom: "Poids", valeur: "380 g" }] },
-    { titre: "Dimension ", texte: "Housse de couette ", mesures: [{ nom: "Taille", valeur: "140 x 200 cm" }, { nom: "Poids", valeur: "650 g" }] },
+    { titre: "Dimension 📐 ", texte: "Drapeau: 90 x 150 cm 100g" },
+    { titre: "Dimension 📐 ", texte: "Serviette: 70 x 140 cm 380g" },
+    { titre: "Dimension 📐 ", texte: "Housse de couette: 140 x 200 cm 650 g" },
   ],
 
   liens: [
