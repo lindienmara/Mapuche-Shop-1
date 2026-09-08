@@ -1,6 +1,6 @@
 // IDENTITÉ DE LA BOUTIQUE
 // -----------------------
-// Fichier produit par l'atelier : https://mes-boutiques-psi.vercel.app
+// Fichier produit par l'atelier : file://
 
 export const BOUTIQUE = {
   nom: "Mapuche-Shop-1",
@@ -68,6 +68,9 @@ export const BOUTIQUE = {
     { titre: "Zone de livraison", texte: "Toutes la France " },
     { titre: "Délai de préparation", texte: "24/48H" },
     { titre: "Moyens de paiement", texte: "PCS/Virement /PayPal " },
+    { titre: "Dimension", texte: "Drapeau 🚩 ", mesures: [{ nom: "Taille", valeur: "90 x 150 cm" }, { nom: "Poids", valeur: "100 g" }] },
+    { titre: "Dimension", texte: "Serviette", mesures: [{ nom: "Taille", valeur: "70 x 140 cm" }, { nom: "Poids", valeur: "380 g" }] },
+    { titre: "Dimension ", texte: "Housse de couette ", mesures: [{ nom: "Taille", valeur: "140 x 200 cm" }, { nom: "Poids", valeur: "650 g" }] },
   ],
 
   liens: [

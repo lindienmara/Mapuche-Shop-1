@@ -1,7 +1,7 @@
 // CATALOGUE — TROIS NIVEAUX
 // -------------------------
 // FAMILLE  →  GAMME  →  PRODUIT
-// Fichier produit par l'atelier : https://mes-boutiques-psi.vercel.app
+// Fichier produit par l'atelier : file://
 
 export const FAMILLES = [
   {
@@ -117,7 +117,7 @@ export const FAMILLES = [
           { ref: "REF-006", nom: "GTA Maroco ", unite: "la pièce", prix: 20, dispo: true, image: "/produits/gta-maroco.jpg" },
           { ref: "REF-007", nom: "GTA DBZ", unite: "la pièce", prix: 20, dispo: true, cadrage: "entier", image: "/produits/gta-dbz.jpg" },
           { ref: "REF-008", nom: "GTA One Piece", unite: "la pièce", prix: 20, dispo: true, cadrage: "entier", image: "/produits/gta-one-piece.jpg" },
-          { ref: "REF-009", nom: "GTA Akatsuki", unite: "la pièce", prix: 20, dispo: false, cadrage: "entier", image: "/produits/gta-akatsuki.jpg" },
+          { ref: "REF-009", nom: "GTA Akatsuki", unite: "la pièce", prix: 20, dispo: true, cadrage: "entier", image: "/produits/gta-akatsuki.jpg" },
         ],
       },
       {
@@ -152,13 +152,13 @@ export const FAMILLES = [
           { ref: "REF-001", nom: "MMA2 Black Freezer Vrunk", unite: "la pièce", prix: 20, dispo: true, cadrage: "entier", image: "/produits/mma2-black-freezer-vrunk.jpg" },
           { ref: "REF-002", nom: "MMA2 Black Goku 2", unite: "la pièce", prix: 20, dispo: true, image: "/produits/mma2-black-goku-2.jpg" },
           { ref: "REF-003", nom: "MMA2 Black Goku", unite: "la pièce", prix: 20, dispo: false, image: "/produits/mma2-black-goku.jpg" },
-          { ref: "REF-004", nom: "MMA2 Broly 2", unite: "la pièce", prix: 20, dispo: false, image: "/produits/mma2-broly-2.jpg" },
+          { ref: "REF-004", nom: "MMA2 Broly 2", unite: "la pièce", prix: 20, dispo: true, image: "/produits/mma2-broly-2.jpg" },
           { ref: "REF-005", nom: "MMA2 Broly 3", unite: "la pièce", prix: 20, dispo: true, image: "/produits/mma2-broly-3.jpg" },
           { ref: "REF-006", nom: "MMA2 Broly SSJ1 Vrunk", unite: "la pièce", prix: 20, dispo: true, chef: true, vedette: true, image: "/produits/mma2-broly-ssj1-vrunk.jpg" },
           { ref: "REF-007", nom: "MMA2 Buu Vrunk", unite: "la pièce", prix: 20, dispo: true, image: "/produits/mma2-buu-vrunk.jpg" },
           { ref: "REF-008", nom: "MMA2 Buu 2", unite: "la pièce", prix: 20, dispo: true, image: "/produits/mma2-buu-2.jpg" },
           { ref: "REF-009", nom: "MMA2 Cell 2", unite: "la pièce", prix: 20, dispo: true, image: "/produits/mma2-cell-2.jpg" },
-          { ref: "REF-010", nom: "MMA2 Gohan 2", unite: "la pièce", prix: 20, dispo: true, image: "/produits/mma2-gohan-2.jpg" },
+          { ref: "REF-010", nom: "MMA2 Gohan 2", unite: "la pièce", prix: 20, dispo: false, image: "/produits/mma2-gohan-2.jpg" },
           { ref: "REF-011", nom: "MMA2 Goku Maroc", unite: "la pièce", prix: 20, dispo: true, image: "/produits/mma2-goku-maroc.jpg" },
           { ref: "REF-012", nom: "MMA2 Goku SSJ 3 ", unite: "la pièce", prix: 20, dispo: true, image: "/produits/mma2-goku-ssj-3.jpg" },
           { ref: "REF-013", nom: "MMA2 Goku Vs Vegeta", unite: "la pièce", prix: 20, dispo: true, image: "/produits/mma2-goku-vs-vegeta.jpg" },
