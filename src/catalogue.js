@@ -114,7 +114,7 @@ export const FAMILLES = [
           { ref: "REF-003", nom: "GTA Lyon", unite: "la pièce", prix: 20, dispo: false, chef: true, image: "/produits/gta-lyon.jpg" },
           { ref: "REF-004", nom: "GTA Paris ", unite: "la pièce", prix: 20, dispo: true, cadrage: "entier", image: "/produits/gta-paris.jpg" },
           { ref: "REF-005", nom: "GTA Colombie ", unite: "la pièce", prix: 20, dispo: true, image: "/produits/gta-colombie.jpg" },
-          { ref: "REF-006", nom: "GTA Maroco ", unite: "la pièce", prix: 20, dispo: true, image: "/produits/gta-maroco.jpg" },
+          { ref: "REF-006", nom: "GTA Maroco ", unite: "la pièce", prix: 20, dispo: false, image: "/produits/gta-maroco.jpg" },
           { ref: "REF-007", nom: "GTA DBZ", unite: "la pièce", prix: 20, dispo: true, cadrage: "entier", image: "/produits/gta-dbz.jpg" },
           { ref: "REF-008", nom: "GTA One Piece", unite: "la pièce", prix: 20, dispo: true, cadrage: "entier", image: "/produits/gta-one-piece.jpg" },
           { ref: "REF-009", nom: "GTA Akatsuki", unite: "la pièce", prix: 20, dispo: false, cadrage: "entier", image: "/produits/gta-akatsuki.jpg" },
