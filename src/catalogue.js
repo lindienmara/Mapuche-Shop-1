@@ -148,6 +148,7 @@ export const FAMILLES = [
         nom: "Collection MMA 2",
         etiquette: "FR",
         sousTitre: "Tous les produits Collection 2 MMA",
+        remise: 50,
         produits: [
           { ref: "REF-001", nom: "MMA2 Black Freezer Vrunk", unite: "la pièce", prix: 20, dispo: true, cadrage: "entier", image: "/produits/mma2-black-freezer-vrunk.jpg" },
           { ref: "REF-002", nom: "MMA2 Black Goku 2", unite: "la pièce", prix: 20, dispo: true, image: "/produits/mma2-black-goku-2.jpg" },
@@ -175,6 +176,7 @@ export const FAMILLES = [
         nom: "Collection FÉLINS",
         etiquette: "FR",
         sousTitre: "Lion blanc, tigre blanc, jaguar",
+        remise: 50,
         produits: [
           { ref: "MA-DR-FEL", nom: "Drapeaux Félins", unite: "la pièce", prix: 20, dispo: true, chef: true, image: "/produits/drapeaux-felins-2.jpg", 
             images: ["/produits/drapeaux-felins-2.jpg", "/produits/drapeaux-felins.jpg"] },
@@ -187,6 +189,7 @@ export const FAMILLES = [
         nom: "Collection DRAPEAUX NATIONAUX",
         etiquette: "FR",
         sousTitre: "Emblèmes et animaux",
+        remise: 50,
         produits: [
           { ref: "MA-DR-MAR", nom: "Drapeau Maroc — Lion de l'Atlas", unite: "la pièce", prix: 20, dispo: true, chef: true, image: "/produits/drapeau-maroc-lion-de-l-atlas.jpg", 
             images: ["/produits/drapeau-maroc-lion-de-l-atlas.jpg", "/produits/drapeau-maroc.jpg"] },
@@ -199,6 +202,7 @@ export const FAMILLES = [
         nom: "COLLECTION VOITURE",
         etiquette: "FR",
         sousTitre: "",
+        remise: 50,
         produits: [
           { ref: "REF-001", nom: "Audi R8", unite: "la pièce", prix: 20, dispo: true, image: "/produits/audi-r8.jpg" },
           { ref: "REF-002", nom: "Audi RS Q3", unite: "la pièce", prix: 20, dispo: true, image: "/produits/audi-rs-q3.jpg" },
