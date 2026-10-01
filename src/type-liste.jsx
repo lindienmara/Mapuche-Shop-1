@@ -11,7 +11,7 @@ import React, { useState, useMemo } from "react";
 import { Search, PlayCircle, Star, X } from "lucide-react";
 import { visuelProduit } from "./visuels.js";
 import {
-  BOUTIQUE, FAMILLES, TOUS_PRODUITS, EST_VIDEOS, SECOURS, GALERIE, AJUSTEMENT,
+  BOUTIQUE, FAMILLES, TOUS_PRODUITS, PRODUITS_EN_PROMOTION, EST_VIDEOS, SECOURS, GALERIE, AJUSTEMENT,
   STYLE_PHOTO, Vedettes, RemonterEnHaut, ToutesLesFamilles, Photo, Prix, Etiquette, VOILE, CARTE, COLONNE, DEGRADE,
   TITRE, CORPS, euros, fond, fondCarte, bordure, texte, texteDoux, rose, violet,
   vert, jaune, cyan,
@@ -24,10 +24,16 @@ export function EcranListe({ onProduit, onFamille }) {
   const galeries = FAMILLES.filter(EST_VIDEOS);
   const rayons = FAMILLES.filter((f) => !EST_VIDEOS(f));
 
+  /* LES PROMOTIONS, UNE PASTILLE PARMI LES AUTRES.
+     Ici tout tient sur une page : un rayon de plus ferait apparaître chaque
+     article remisé deux fois dans la même liste. C'est donc un FILTRE, pas un
+     rayon — et ça tombe bien, c'est déjà la façon de faire de cet écran. */
   const produits = useMemo(() => {
     const q = recherche.trim().toLowerCase();
     return TOUS_PRODUITS
-      .filter((p) => filtre === "tous" || p.famille.id === filtre)
+      .filter((p) => (filtre === "promotions"
+        ? Number(p.remise) > 0 && Number(p.prixInitial) > Number(p.prix)
+        : filtre === "tous" || p.famille.id === filtre))
       .filter((p) => !q || p.nom.toLowerCase().includes(q) || (p.gamme.nom || "").toLowerCase().includes(q));
   }, [filtre, recherche]);
 
@@ -92,6 +98,10 @@ export function EcranListe({ onProduit, onFamille }) {
       />
 
       <div className="flex gap-2 overflow-x-auto px-3 mt-3 pb-1" style={{ scrollbarWidth: "none" }}>
+        {/* En TÊTE de la rangée, et seulement les jours de promotion : c'est la
+            première chose qui doit tomber sous le pouce. */}
+        {PRODUITS_EN_PROMOTION.length > 0 && pastille(filtre === "promotions", "promotions",
+          <span>🏷️ {PRODUITS_EN_PROMOTION.length} EN PROMOTION</span>, rose)}
         {rayons.map((f) => pastille(filtre === f.id, f.id,
           <span>{f.emoji} {f.nom}</span>, f.couleurs[0]))}
         {galeries.map((f) => (
