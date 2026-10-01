@@ -28,7 +28,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { visuelFamille, visuelProduit } from "./visuels.js";
 import {
-  FAMILLES, EST_VIDEOS, EN_RUPTURE, GALERIE, CLE, euros, PROPORTION_PHOTO, ChoixEtCommande,
+  FAMILLES_AFFICHEES, EST_VIDEOS, EN_RUPTURE, GALERIE, CLE, euros, PROPORTION_PHOTO, ChoixEtCommande,
   CadreVideo,
   TITRE, CORPS, CARTE, bordure, texte, texteDoux, jaune,
 } from "./commun.jsx";
@@ -43,7 +43,7 @@ import {
 const PROPORTION_MARQUE = PROPORTION_PHOTO || "3 / 4";
 
 // Les marques : les familles de produits, les galeries de vidéos mises à part.
-export const MARQUES = FAMILLES.filter((f) => !EST_VIDEOS(f));
+export const MARQUES = FAMILLES_AFFICHEES.filter((f) => !EST_VIDEOS(f));
 
 // Tous les modèles d'une marque, dans l'ordre du catalogue. Les gammes ne sont
 // pas montrées au client — ici, elles ne servent qu'à ranger côté atelier.

@@ -19,7 +19,7 @@ import React from "react";
 import { ChevronRight, PlayCircle } from "lucide-react";
 import { visuelProduit } from "./visuels.js";
 import {
-  BOUTIQUE, FAMILLES, TOUS_PRODUITS, VEDETTES, SELECTION_CHEF, EST_VIDEOS, EN_RUPTURE,
+  BOUTIQUE, FAMILLES_AFFICHEES, TOUS_PRODUITS, VEDETTES, SELECTION_CHEF, EST_VIDEOS, EN_RUPTURE,
   SECOURS, AJUSTEMENT, GALERIE, Photo, CORPS, euros, bordure, texte, texteDoux, jaune,
 } from "./commun.jsx";
 
@@ -218,7 +218,7 @@ export function EcranLuxe({ onFamille, onProduit }) {
 
       <Intertitre>Les collections</Intertitre>
       <div style={{ borderTop: FILET }}>
-        {FAMILLES.map((f) => <Collection key={f.id} famille={f} onFamille={onFamille} />)}
+        {FAMILLES_AFFICHEES.map((f) => <Collection key={f.id} famille={f} onFamille={onFamille} />)}
       </div>
 
       <Filet marge={26} />
