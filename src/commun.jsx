@@ -189,8 +189,17 @@ export const VEDETTES = TOUS_PRODUITS.filter((p) => p.vedette).slice(0, 8);
    comptes sont calculés avant lui. Sans cette précaution, chaque article
    remisé serait apparu deux fois dans la présentation « tout sur une page »,
    et « 83 articles » en aurait annoncé 87. */
+/* ⚠️ UN ARTICLE ÉPUISÉ N'A RIEN À FAIRE DANS LES PROMOTIONS.
+   Le rayon est fait pour donner envie d'acheter. Y laisser un article qu'on
+   ne peut pas commander, c'est promettre −50 % sur rien : le client clique,
+   lit « ÉPUISÉ », et repart. Il reste visible dans son rayon d'origine, lui,
+   parce que là il annonce honnêtement un retour.
+
+   « dispo » suffit à les écarter tous les deux : un rayon entier mis en
+   rupture pose déjà « dispo: false » sur chacun de ses articles, plus haut
+   dans ce fichier. */
 const EN_PROMOTION_MAINTENANT = (p) =>
-  Number(p.remise) > 0 && Number(p.prixInitial) > Number(p.prix);
+  Number(p.remise) > 0 && Number(p.prixInitial) > Number(p.prix) && p.dispo !== false;
 
 export const PRODUITS_EN_PROMOTION = TOUS_PRODUITS.filter(EN_PROMOTION_MAINTENANT);
 

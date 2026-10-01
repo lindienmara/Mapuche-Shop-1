@@ -32,7 +32,8 @@ export function EcranListe({ onProduit, onFamille }) {
     const q = recherche.trim().toLowerCase();
     return TOUS_PRODUITS
       .filter((p) => (filtre === "promotions"
-        ? Number(p.remise) > 0 && Number(p.prixInitial) > Number(p.prix)
+        // Memes regles que le rayon des promotions : un article epuise n y est pas.
+        ? Number(p.remise) > 0 && Number(p.prixInitial) > Number(p.prix) && p.dispo !== false
         : filtre === "tous" || p.famille.id === filtre))
       .filter((p) => !q || p.nom.toLowerCase().includes(q) || (p.gamme.nom || "").toLowerCase().includes(q));
   }, [filtre, recherche]);
