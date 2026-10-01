@@ -174,6 +174,78 @@ export const SELECTION_CHEF = TOUS_PRODUITS.filter((p) => p.chef);
 // visible juste dessous, sans faire défiler.
 export const VEDETTES = TOUS_PRODUITS.filter((p) => p.vedette).slice(0, 8);
 
+/* ⚠️ UNE PROMOTION QUE PERSONNE NE TROUVE N'EN EST PAS UNE.
+   ────────────────────────────────────────────────────────
+   Les remises étaient bien appliquées : le prix barré s'affichait, mais
+   seulement une fois le client ARRIVÉ sur la bonne collection. Sur l'accueil,
+   rien ne disait qu'une promotion était en cours. Il fallait ouvrir les
+   rayons un par un pour tomber dessus — autrement dit, personne ne la voyait.
+
+   D'où ce rayon, qui n'existe que les jours de promotion et disparaît tout
+   seul le reste du temps. Aucun réglage à faire : il se remplit de ce qui est
+   remisé, où que ce soit dans le catalogue.
+
+   Il NE FAIT PAS PARTIE du catalogue — « TOUS_PRODUITS », la recherche et les
+   comptes sont calculés avant lui. Sans cette précaution, chaque article
+   remisé serait apparu deux fois dans la présentation « tout sur une page »,
+   et « 83 articles » en aurait annoncé 87. */
+const EN_PROMOTION_MAINTENANT = (p) =>
+  Number(p.remise) > 0 && Number(p.prixInitial) > Number(p.prix);
+
+export const PRODUITS_EN_PROMOTION = TOUS_PRODUITS.filter(EN_PROMOTION_MAINTENANT);
+
+/* Un groupe par rayon d'origine, et non un seul tas : « DRAPEAUX » puis
+   « SERVIETTES » se parcourt, trente articles en vrac ne se parcourt pas. */
+export const FAMILLE_PROMOTIONS = PRODUITS_EN_PROMOTION.length
+  ? {
+    id: "promotions",
+    nom: "TOUTES LES PROMOTIONS",
+    emoji: "🏷️",
+    glyphe: "etoile",
+    image: "",
+    video: "",
+    type: "produits",
+    dispo: true,
+    promotions: true,              // ce rayon-ci n'est pas un rayon du vendeur
+    couleurs: [rose, jaune],
+    gammes: FAMILLES
+      .filter((f) => !EST_VIDEOS(f))
+      .map((f) => ({
+        id: "promo-" + f.id,
+        nom: f.nom,
+        etiquette: "%",
+        sousTitre: "",
+        produits: (f.gammes || []).flatMap((g) => (g.produits || []).filter(EN_PROMOTION_MAINTENANT)),
+      }))
+      .filter((g) => g.produits.length),
+  }
+  : null;
+
+// La liste des rayons telle qu'on la MONTRE : le rayon des promotions en tête,
+// les jours où il existe. C'est la seule liste qui le contient.
+export const FAMILLES_AFFICHEES = FAMILLE_PROMOTIONS
+  ? [FAMILLE_PROMOTIONS, ...FAMILLES]
+  : FAMILLES;
+
+// « −50 % » posé sur une photo. Le même repère partout : sur la tuile du
+// rayon, sur les vedettes de l'accueil, sur une carte de produit.
+export function EtiquettePromo({ taux, className = "absolute top-2 left-2", petit = false }) {
+  if (!(Number(taux) > 0)) return null;
+  return (
+    <span
+      className={className}
+      style={{
+        background: rose, color: "#0B0B0F", fontFamily: CORPS, fontWeight: 800,
+        fontSize: petit ? 8.5 : 10.5, letterSpacing: ".02em",
+        borderRadius: petit ? 4 : 6, padding: petit ? "1px 3px" : "2px 7px",
+        whiteSpace: "nowrap", boxShadow: "0 1px 4px #000A",
+      }}
+    >
+      −{taux}%
+    </span>
+  );
+}
+
 // Deux façons de présenter le même catalogue :
 //   « familles » : on descend famille → gamme → produit
 //   « liste »    : tout sur une page, avec recherche et pastilles de catégories
@@ -1292,11 +1364,22 @@ export function Vedettes({ onProduit }) {
                   className="absolute top-1 right-1"
                   style={{ filter: "drop-shadow(0 0 2px #000)" }}
                 />
+                {/* Le carré d'une vedette fait 9 pixels de texte : la pastille
+                    « −50 % » du tronc commun n'y tiendrait pas. Elle se pose
+                    donc sur la photo, et le prix de départ se barre sous le
+                    nouveau. Sans ça, l'accueil affichait « 10,00 € » et rien
+                    ne laissait deviner que c'était un prix de promotion. */}
+                <EtiquettePromo taux={p.remise} petit className="absolute top-1 left-1" />
                 <div className="px-1 pb-1 pt-0.5" style={{ background: "#000" }}>
                   <p className="truncate" style={{ fontFamily: CORPS, fontSize: 9.5, fontWeight: 700, color: texte }}>
                     {p.nom}
                   </p>
                   <p className="truncate" style={{ fontFamily: CORPS, fontSize: 9, color: jaune }}>
+                    {p.prixInitial > p.prix && (
+                      <span style={{ color: texteDoux, textDecoration: "line-through", textDecorationThickness: 1.5, marginRight: 3 }}>
+                        {euros(p.prixInitial)}
+                      </span>
+                    )}
                     {euros(p.prix)}
                   </p>
                 </div>
