@@ -94,7 +94,28 @@ const REMISE = (v) => {
   return n >= 1 && n <= 90 ? Math.round(n) : 0;
 };
 
-const EN_PROMOTION = (famille) => ({
+/* ⚠️ LA PROMOTION S'ARRÊTE TOUTE SEULE.
+   ──────────────────────────────────────
+   « Une semaine ou deux » ne se termine jamais le bon jour : on y repense le
+   mardi suivant, et la boutique a vendu trois jours de plus à −25 %.
+
+   Le dernier jour est écrit dans les réglages. La boutique le compare à la
+   date du visiteur à chaque visite, et reprend ses prix normaux le lendemain
+   — sans que personne ait à republier quoi que ce soit, ni même à y penser.
+
+   On compare des JOURS, écrits « AAAA-MM-JJ », et jamais des heures : dans
+   cette écriture, comparer deux textes revient à comparer deux dates, et
+   aucun décalage horaire ne peut faire basculer la boutique une nuit trop
+   tôt. Le jour inscrit est inclus — c'est encore un jour de promotion. */
+const PROMOTIONS_TERMINEES = (() => {
+  const fin = String(BOUTIQUE.promoFin || "").trim();
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(fin)) return false;
+  const d = new Date();
+  const jour = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  return jour > fin;
+})();
+
+const EN_PROMOTION = (famille) => (PROMOTIONS_TERMINEES ? famille : {
   ...famille,
   gammes: (famille.gammes || []).map((gamme) => ({
     ...gamme,

@@ -10,7 +10,7 @@
 
 export const MOTEUR = {
   modele: "vitrine-3-niveaux",
-  version: "3.33",
+  version: "3.34",
   // Ce que sait faire cette version, pour information.
   capacites: [
     "familles > gammes > produits",
@@ -61,5 +61,6 @@ export const MOTEUR = {
     "le prix de depart reste affiche, barre, a cote du prix promotionnel",
     "le panier dit quoi donner pour etre livre, et sous quel delai la commande part",
     "les lignes nom, adresse et telephone partent avec la commande, a completer",
+    "une promotion peut avoir un dernier jour : la boutique reprend ses prix normaux toute seule",
   ],
 };
