@@ -12,7 +12,7 @@
 import React, { useState, useMemo, useEffect, useRef } from "react";
 import {
   ChevronLeft, ChevronRight, Search, ShoppingCart, Plus, Minus, X,
-  Home, Info, Link2, Star, MessageCircle, Maximize2, PlayCircle,
+  Home, Info, Link2, Star, MessageCircle, Maximize2, PlayCircle, Package,
 } from "lucide-react";
 import { BOUTIQUE as BOUTIQUE_PUBLIEE, COULEURS as COULEURS_PUBLIEES } from "./config.js";
 import { FAMILLES as FAMILLES_PUBLIEES } from "./catalogue.js";
@@ -67,7 +67,55 @@ const RAYON_FERME = (f) => (!EN_RUPTURE(f) ? f : {
   })),
 });
 
-export const FAMILLES = (APERCU ? APERCU.FAMILLES : FAMILLES_PUBLIEES).map(RAYON_FERME);
+/* ───────────── LES PROMOTIONS, APPLIQUÉES UNE SEULE FOIS ─────────────
+
+   Une remise peut être posée à trois niveaux : sur un produit, sur une gamme,
+   ou sur une famille entière. La plus PRÉCISE l'emporte — une remise écrite
+   sur un produit gagne sur celle de sa gamme, qui gagne sur celle de sa
+   famille. C'est l'ordre naturel : on solde un rayon, puis on fait une offre
+   à part sur un article de ce rayon.
+
+   ★ POURQUOI ON RÉÉCRIT LE PRIX ICI, ET PAS À L'AFFICHAGE.
+
+   La tentation était de barrer l'ancien prix au moment de le dessiner, et de
+   n'y toucher nulle part ailleurs. C'était un piège : le panier, le total et
+   le message de commande lisent « produit.prix » chacun de leur côté. Le
+   client aurait vu −50 % sur la fiche, puis le plein tarif dans son message —
+   et ce message est ce qu'il envoie pour commander.
+
+   Alors le prix EST le prix remisé, dès le chargement du catalogue. Tout ce
+   qui compte de l'argent est juste sans rien avoir à savoir des promotions.
+   L'ancien prix est conservé à côté, sous « prixInitial », et ne sert qu'à
+   être barré. */
+const REMISE = (v) => {
+  const n = Number(v) || 0;
+  // Au-delà de 90 % on vend à perte par accident ; en dessous de 1, ce n'est
+  // pas une promotion, c'est une erreur de frappe.
+  return n >= 1 && n <= 90 ? Math.round(n) : 0;
+};
+
+const EN_PROMOTION = (famille) => ({
+  ...famille,
+  gammes: (famille.gammes || []).map((gamme) => ({
+    ...gamme,
+    produits: (gamme.produits || []).map((produit) => {
+      const taux = REMISE(produit.remise) || REMISE(gamme.remise) || REMISE(famille.remise);
+      if (!taux) return produit;
+
+      const avant = Number(produit.prix) || 0;
+      if (avant <= 0) return produit; // rien à remiser sur un prix non renseigné
+
+      // Arrondi au centime : un prix à 18,749999 € s'affiche mal et se
+      // calcule encore plus mal une fois multiplié par la quantité.
+      const apres = Math.round(avant * (100 - taux)) / 100;
+      return { ...produit, prix: apres, prixInitial: avant, remise: taux };
+    }),
+  })),
+});
+
+export const FAMILLES = (APERCU ? APERCU.FAMILLES : FAMILLES_PUBLIEES)
+  .map(RAYON_FERME)
+  .map(EN_PROMOTION);
 
 // Une famille peut être une galerie de vidéos au lieu d'un rayon de produits.
 // Elle se place où on veut dans la liste, et rien ne s'y achète : ni prix, ni
@@ -341,6 +389,11 @@ export const PAIEMENTS = (BOUTIQUE.paiements || [])
   }))
   .filter((p) => !!p.lien);
 
+/* CE QU'IL FAUT DONNER POUR RECEVOIR UN COLIS.
+   Réglé depuis l'atelier, onglet Commandes. Vide = la boutique livre en main
+   propre, et rien ne s'affiche. */
+export const LIVRAISON = String(BOUTIQUE.livraison || "").trim();
+
 /* ★ BOUTIQUE OU VITRINE — la boutique le déduit, on ne le lui dit pas.
 
    Commander suppose un chemin : soit une conversation où envoyer la commande,
@@ -443,6 +496,32 @@ export function MoyensDePaiement({ total = 0, reference = "" }) {
   );
 }
 
+/* CE QU'IL FAUT DONNER POUR ÊTRE LIVRÉ — DANS LE PANIER, AVANT L'ENVOI.
+
+   Le même texte part ensuite avec la commande. Il est écrit deux fois exprès :
+   lu ici, le client sait ce qu'on va lui demander ; retrouvé dans la
+   conversation, il n'a plus qu'à compléter les lignes.
+
+   Encadré et non en gris discret : c'est la seule chose de ce panier que le
+   client doit FAIRE. Une note grise sous un bouton vert ne se lit jamais. */
+export function BlocLivraison() {
+  if (!LIVRAISON) return null;
+  return (
+    <div
+      className="rounded-xl px-3 py-2.5 mb-3 flex gap-2.5"
+      style={{ background: VOILE(fond, "CC"), border: `1px solid ${jaune}55` }}
+    >
+      <Package size={16} color={jaune} style={{ flexShrink: 0, marginTop: 2 }} />
+      <p
+        className="text-[12px]"
+        style={{ color: texte, fontFamily: CORPS, lineHeight: 1.65, whiteSpace: "pre-line" }}
+      >
+        {LIVRAISON}
+      </p>
+    </div>
+  );
+}
+
 /* DÉCOUPER UNE LISTE ÉCRITE À LA MAIN.
    Le vendeur tape « 39 · 40 · 41 », ou « 39, 40, 41 », ou « 39/40/41 », ou
    « 39 40 41 » — et il a raison à chaque fois. C'est au logiciel de s'adapter,
@@ -499,7 +578,11 @@ export function texteCommande(items, reference = "") {
     : "";
   // La référence, pour que le vendeur rapproche un virement d'une commande.
   const ref = reference ? `\n\nRéférence : ${reference}` : "";
-  return `${BOUTIQUE.accroche}\n\n${lignes.join("\n")}\n\nTotal : ${euros(cartTotal(items))}${ref}${moyens}`;
+  /* Les lignes à compléter partent EN DERNIER, donc juste au-dessus du
+     clavier quand la conversation s'ouvre. Plus haut, elles passeraient
+     au-dessus du pli et personne ne les verrait. */
+  const envoi = LIVRAISON ? `\n\n${LIVRAISON}` : "";
+  return `${BOUTIQUE.accroche}\n\n${lignes.join("\n")}\n\nTotal : ${euros(cartTotal(items))}${ref}${moyens}${envoi}`;
 }
 
 export function lienCommande(items, reference = "") {
@@ -636,16 +719,77 @@ export function Etiquette({ children, couleur = vert }) {
   );
 }
 
-export function Prix({ valeur, taille = 18 }) {
-  return (
+/* LE PRIX, ET CE QU'IL ÉTAIT AVANT.
+
+   Une promotion ne vaut que si l'on voit ce qu'elle fait gagner. « 15 € » ne
+   dit rien ; « 20 € barré, 15 € » dit tout, et sans une phrase.
+
+   Trois choses, dans cet ordre de lecture : l'ancien prix barré et discret,
+   le nouveau en grand et en couleur, la pastille « −25 % » pour que l'œil
+   l'attrape de loin dans une grille.
+
+   `avant` et `remise` sont facultatifs : sans eux, le prix s'affiche
+   exactement comme avant cette option. */
+export function Prix({ valeur, avant, remise, taille = 18 }) {
+  const enPromotion = Number(remise) > 0 && Number(avant) > Number(valeur);
+
+  const leChiffre = (
     <span
       style={{
         fontFamily: TITRE, fontSize: taille, letterSpacing: ".5px",
         backgroundImage: `linear-gradient(90deg, ${jaune}, ${vert})`,
         WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent",
+        // Sans ça, « 60,00 € » se coupe entre le nombre et le symbole dès que
+        // la place manque, et la carte affiche « 60,00 » puis « € » dessous.
+        whiteSpace: "nowrap",
       }}
     >
       {euros(valeur)}
+    </span>
+  );
+
+  if (!enPromotion) return leChiffre;
+
+  /* TROIS MORCEAUX DANS UNE VIGNETTE DE 146 PIXELS.
+     ───────────────────────────────────────────────
+     Sur un téléphone, la grille montre deux produits par ligne : le prix
+     dispose d'une largeur de carte, pas davantage. Les trois morceaux mis
+     bout à bout la dépassaient, et le navigateur coupait où il pouvait —
+     c'est-à-dire en plein milieu d'un prix.
+
+     La ligne a donc le droit de passer à la ligne, mais jamais à l'intérieur
+     d'un nombre : chaque morceau reste entier, et s'il doit descendre, il
+     descend en entier. */
+  return (
+    <span
+      className="inline-flex items-baseline flex-wrap"
+      style={{ columnGap: Math.max(4, taille * 0.24), rowGap: 2 }}
+    >
+      <span
+        style={{
+          fontFamily: CORPS,
+          fontSize: Math.max(10, taille * 0.58),
+          color: texteDoux,
+          textDecoration: "line-through",
+          // Un trait fin se perd sur un fond sombre : on l'épaissit, sinon le
+          // client croit lire deux prix côte à côte.
+          textDecorationThickness: 2,
+          whiteSpace: "nowrap",
+        }}
+      >
+        {euros(avant)}
+      </span>
+      {leChiffre}
+      <span
+        style={{
+          fontFamily: CORPS, fontSize: Math.max(9, taille * 0.42), fontWeight: 800,
+          color: "#0B0B0F", background: rose,
+          borderRadius: 5, padding: "1px 4px", letterSpacing: 0,
+          whiteSpace: "nowrap",
+        }}
+      >
+        −{remise}%
+      </span>
     </span>
   );
 }
@@ -983,7 +1127,7 @@ export function ChoixEtCommande({ produit, onAjouter, compact = false }) {
         <div className="flex items-end justify-between">
           <div>
             <p className="text-[11px] uppercase tracking-wider" style={{ color: texteDoux, fontFamily: CORPS }}>Prix</p>
-            <Prix valeur={produit.prix} taille={32} />
+            <Prix valeur={produit.prix} avant={produit.prixInitial} remise={produit.remise} taille={32} />
             <p className="text-[12px]" style={{ color: texteDoux, fontFamily: CORPS }}>{produit.unite}</p>
           </div>
           <div>

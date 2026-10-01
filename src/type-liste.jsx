@@ -135,7 +135,7 @@ export function EcranListe({ onProduit, onFamille }) {
               <div className="p-2.5">
                 <p className="text-[12.5px] font-bold leading-tight" style={{ color: texte, fontFamily: CORPS }}>{p.nom}</p>
                 <p className="text-[10px] mt-0.5" style={{ color: texteDoux, fontFamily: CORPS }}>{p.unite}</p>
-                <div className="mt-1"><Prix valeur={p.prix} taille={16} /></div>
+                <div className="mt-1"><Prix valeur={p.prix} avant={p.prixInitial} remise={p.remise} taille={16} /></div>
               </div>
             </button>
           ))}

@@ -47,7 +47,7 @@ export function EcranFamilles({ onFamille, onProduit }) {
                       style={{ background: CARTE, border: `1px solid ${bordure}`, minWidth: 148 }}
                     >
                       <p className="text-[12px] font-bold truncate" style={{ color: texte, fontFamily: CORPS }}>{p.nom}</p>
-                      <Prix valeur={p.prix} taille={15} />
+                      <Prix valeur={p.prix} avant={p.prixInitial} remise={p.remise} taille={15} />
                     </button>
                   ))}
                 </div>

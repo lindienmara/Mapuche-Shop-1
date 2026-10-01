@@ -23,6 +23,22 @@ import {
   SECOURS, AJUSTEMENT, GALERIE, Photo, CORPS, euros, bordure, texte, texteDoux, jaune,
 } from "./commun.jsx";
 
+/* L'ANCIEN PRIX, DANS LA TYPOGRAPHIE DE LA MAISON.
+
+   Ce type de boutique est volontairement dépouillé : une ligne fine, très
+   espacée, sans couleur criarde. Y poser la pastille rose du tronc commun
+   casserait tout. On se contente donc du prix barré, juste avant le nouveau —
+   c'est discret, et c'est suffisant pour comprendre. */
+function AncienPrix({ produit }) {
+  if (!(Number(produit.remise) > 0) || !(Number(produit.prixInitial) > produit.prix)) return null;
+  return (
+    <span style={{ color: texteDoux, textDecoration: "line-through", textDecorationThickness: 1.5, marginRight: 8 }}>
+      {euros(produit.prixInitial)}
+    </span>
+  );
+}
+
+
 // Les lettres de cette boutique : fines, très espacées, en capitales. C'est ce
 // qui distingue une enseigne d'une étiquette de prix.
 const CAPITALES = {
@@ -85,7 +101,7 @@ function MaitresseSansPhoto({ produit, onProduit }) {
       </p>
       <div style={{ height: 1, background: `${jaune}44`, margin: "18px 0", width: 54 }} />
       <p style={{ fontFamily: CORPS, fontWeight: 300, fontSize: 15, color: jaune, letterSpacing: ".08em" }}>
-        {euros(produit.prix)}
+        <AncienPrix produit={produit} />{euros(produit.prix)}
       </p>
     </button>
   );
@@ -119,7 +135,7 @@ function Maitresse({ produit, onProduit }) {
           {produit.nom}
         </p>
         <p style={{ fontFamily: CORPS, fontWeight: 300, fontSize: 14, color: jaune, marginTop: 7, letterSpacing: ".08em" }}>
-          {euros(produit.prix)}
+          <AncienPrix produit={produit} />{euros(produit.prix)}
         </p>
       </div>
     </button>
@@ -144,7 +160,7 @@ function Piece({ produit, onProduit }) {
         {produit.nom}
       </p>
       <p style={{ fontFamily: CORPS, fontWeight: 300, fontSize: 11.5, color: jaune, marginTop: 3, letterSpacing: ".07em" }}>
-        {euros(produit.prix)}
+        <AncienPrix produit={produit} />{euros(produit.prix)}
       </p>
     </button>
   );

@@ -22,7 +22,7 @@ import {
   TOUS_PRODUITS, SELECTION_CHEF, VEDETTES, SECOURS, PRESENTATION, AJUSTEMENT,
   CLE, PROPORTION_PHOTO, STYLE_PHOTO, FOND_IMAGE, COLONNE, CARTE, VOILE, FOND_PAGE,
   DEGRADE, TITRE, CORPS, INTRO, ANIMATIONS, telegram, euros, MESSAGERIES,
-  MESSAGERIE, CONTACT, Photo, Video, Etiquette, Prix, BarreSection, Vedettes, RemonterEnHaut, MoyensDePaiement, referenceCommande, PEUT_COMMANDER,
+  MESSAGERIE, CONTACT, Photo, Video, Etiquette, Prix, BarreSection, Vedettes, RemonterEnHaut, MoyensDePaiement, BlocLivraison, referenceCommande, PEUT_COMMANDER,
   AVIS, Carrousel, CHOIX, ChoixEtCommande, CadreVideo,
   cartTotal, texteCommande, lienCommande, copierAvantDePartir,
   fond, fondCarte, bordure, texte, texteDoux, rose, violet, vert, jaune, cyan,
@@ -150,7 +150,7 @@ function EcranProduits({ famille, gamme, onProduit, onRetour }) {
             <div className="p-2.5">
               <p className="text-[12.5px] font-bold leading-tight" style={{ color: texte, fontFamily: CORPS }}>{p.nom}</p>
               <p className="text-[10px] mt-0.5" style={{ color: texteDoux, fontFamily: CORPS }}>{p.unite}</p>
-              <div className="mt-1"><Prix valeur={p.prix} taille={16} /></div>
+              <div className="mt-1"><Prix valeur={p.prix} avant={p.prixInitial} remise={p.remise} taille={16} /></div>
             </div>
           </button>
         ))}
@@ -279,15 +279,57 @@ function EcranFiche({ famille, gamme, produit, onRetour, onAjouter, onOuvrir, on
   );
 }
 
+/* UNE FICHE TECHNIQUE, PAS UN PARAGRAPHE.
+
+   Un drapeau, une housse de couette, une serviette se choisissent sur des
+   chiffres : 150 × 90 cm, 220 g/m², lavable à 40°. Noyés dans une phrase, ces
+   chiffres se cherchent — et un client qui cherche écrit pour demander, ou
+   s'en va.
+
+   En deux colonnes, ils se lisent d'un coup d'œil : le nom à gauche en gris,
+   la valeur à droite en clair, un trait fin entre chaque ligne. C'est la
+   présentation d'une étiquette de produit, et personne n'a besoin qu'on la
+   lui explique.
+
+   La dernière ligne n'a pas de trait sous elle : un trait qui ne sépare rien
+   fait « tableau coupé ». */
+function Mesures({ lignes }) {
+  if (!lignes || lignes.length === 0) return null;
+  return (
+    <div className="mt-3">
+      {lignes.map((m, i) => (
+        <div
+          key={m.nom + i}
+          className="flex items-baseline justify-between gap-3 py-2"
+          style={{ borderBottom: i < lignes.length - 1 ? `1px solid ${bordure}` : "none" }}
+        >
+          <span className="text-[13px] flex-shrink-0" style={{ color: texteDoux, fontFamily: CORPS }}>
+            {m.nom}
+          </span>
+          <span
+            className="text-[14px] text-right"
+            style={{ color: texte, fontFamily: CORPS, fontWeight: 600 }}
+          >
+            {m.valeur}
+          </span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 function EcranInfo() {
   return (
     <>
       <BarreSection titre="INFOS PRATIQUES" />
       <div className="px-3 mt-4 flex flex-col gap-3">
-        {BOUTIQUE.info.map((bloc) => (
-          <div key={bloc.titre} className="rounded-2xl p-4" style={{ background: CARTE, border: `1px solid ${bordure}` }}>
+        {BOUTIQUE.info.map((bloc, i) => (
+          <div key={bloc.titre + i} className="rounded-2xl p-4" style={{ background: CARTE, border: `1px solid ${bordure}` }}>
             <p style={{ fontFamily: TITRE, fontSize: 17, color: jaune }}>{bloc.titre.toUpperCase()}</p>
-            <p className="text-[14px] mt-1" style={{ color: "#D6E8CC", fontFamily: CORPS }}>{bloc.texte}</p>
+            {(bloc.texte || "").trim() && (
+              <p className="text-[14px] mt-1" style={{ color: "#D6E8CC", fontFamily: CORPS }}>{bloc.texte}</p>
+            )}
+            <Mesures lignes={bloc.mesures} />
           </div>
         ))}
       </div>
@@ -937,6 +979,11 @@ export default function Boutique() {
                   <div className="mb-3">
                     <MoyensDePaiement total={cartTotal(panier)} reference={reference} />
                   </div>
+
+                  {/* Ce qu'il faut donner pour être livré, juste au-dessus du
+                      bouton d'envoi : le dernier endroit où le client regarde
+                      encore avant de partir dans sa messagerie. */}
+                  <BlocLivraison />
 
                   {/* Le bouton d'envoi peut être éteint depuis l'atelier : une
                       boutique qui n'encaisse qu'en ligne n'a pas de commande à
