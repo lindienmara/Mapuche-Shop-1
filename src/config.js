@@ -55,7 +55,7 @@ export const BOUTIQUE = {
   /* Dernier jour des promotions, en AAAA-MM-JJ. La boutique le lit à chaque
      visite : le lendemain, elle reprend ses prix normaux toute seule, sans
      republication. Vide = elles durent jusqu'à ce qu'on les retire. */
-  promoFin: "0002-10-11",
+  promoFin: "",
 
   // Envoyer la commande dans une conversation. Mets false pour une boutique
   // qui ne fonctionne qu'au paiement en ligne.
