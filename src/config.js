@@ -43,14 +43,23 @@ export const BOUTIQUE = {
      peut pas encaisser une carte sans danger. Un « lien » ouvre la page de ton
      prestataire — PayPal, Lydia — et c'est lui qui encaisse, chez lui. */
   paiements: [
-    { id: "paypal", nom: "", emoji: "", lien: "https://www.paypal.me/RicardoLemseffer", note: "", compte: "perso", nature: "biens" },
-    { id: "revolut", nom: "", emoji: "", lien: "https://revolut.me/rlemseffer", note: "", compte: "perso", nature: "biens" },
+
   ],
   paiementNote: "",
 
+  /* Ce que le client doit donner pour recevoir son colis, et sous quel délai
+     sa commande part. S'affiche dans le panier ET part avec la commande.
+     Vide = rien ne s'affiche : une boutique qui livre en main propre. */
+  livraison: "",
+
+  /* Dernier jour des promotions, en AAAA-MM-JJ. La boutique le lit à chaque
+     visite : le lendemain, elle reprend ses prix normaux toute seule, sans
+     republication. Vide = elles durent jusqu'à ce qu'on les retire. */
+  promoFin: "",
+
   // Envoyer la commande dans une conversation. Mets false pour une boutique
   // qui ne fonctionne qu'au paiement en ligne.
-  commandeActive: true,
+  commandeActive: false,
 
   // Ouverture de la boutique, jouée une fois par visite.
   // introVideo vide = titre animé, sans rien à charger.
