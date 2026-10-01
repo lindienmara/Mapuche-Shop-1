@@ -43,7 +43,8 @@ export const BOUTIQUE = {
      peut pas encaisser une carte sans danger. Un « lien » ouvre la page de ton
      prestataire — PayPal, Lydia — et c'est lui qui encaisse, chez lui. */
   paiements: [
-
+    { id: "paypal", nom: "", emoji: "", lien: "https://www.paypal.me/RicardoLemseffer", note: "", compte: "perso", nature: "biens" },
+    { id: "revolut", nom: "", emoji: "", lien: "https://revolut.me/rlemseffer", note: "", compte: "perso", nature: "biens" },
   ],
   paiementNote: "",
 
