@@ -13,7 +13,7 @@ import React from "react";
 import { Star, PlayCircle } from "lucide-react";
 import { visuelFamille } from "./visuels.js";
 import {
-  BOUTIQUE, FAMILLES_AFFICHEES, SELECTION_CHEF, EST_VIDEOS, EN_RUPTURE, Vedettes, Prix,
+  BOUTIQUE, FAMILLES, SELECTION_CHEF, EST_VIDEOS, EN_RUPTURE, Vedettes, Prix,
   VOILE, CARTE, TITRE, CORPS, bordure, texte, texteDoux, jaune, cyan,
 } from "./commun.jsx";
 
@@ -55,7 +55,7 @@ export function EcranFamilles({ onFamille, onProduit }) {
             )}
 
       <div className="flex flex-col gap-4 px-3 mt-4">
-        {FAMILLES_AFFICHEES.map((f) => (
+        {FAMILLES.map((f) => (
               <button
                 key={f.id}
                 onClick={() => onFamille(f)}
