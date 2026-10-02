@@ -24,7 +24,8 @@ import {
   DEGRADE, TITRE, CORPS, INTRO, ANIMATIONS, telegram, euros, MESSAGERIES,
   MESSAGERIE, CONTACT, Photo, Video, Etiquette, Prix, BarreSection, Vedettes, RemonterEnHaut, MoyensDePaiement, BlocLivraison, referenceCommande, PEUT_COMMANDER,
   AVIS, Carrousel, CHOIX, ChoixEtCommande, CadreVideo,
-  cartTotal, texteCommande, lienCommande, copierAvantDePartir,
+  cartTotal, totalAPayer, fraisLivraison, resteAvantEnvoiOffert, LIVRAISON_PRIX,
+  texteCommande, lienCommande, copierAvantDePartir,
   fond, fondCarte, bordure, texte, texteDoux, rose, violet, vert, jaune, cyan,
 } from "./commun.jsx";
 import { EcranFamilles } from "./type-familles.jsx";
@@ -987,16 +988,49 @@ export default function Boutique() {
                     </div>
                   ))}
 
-                  <div className="flex items-center justify-between py-4" style={{ borderTop: `1px solid #232323` }}>
+                  {/* ⚠️ LES FRAIS D'ENVOI SE LISENT ICI, PAS APRÈS LA COMMANDE.
+                      Un client qui croit payer 48 € et à qui on en réclame 60
+                      annule — et il a raison. La ligne est donc écrite avant le
+                      total, et le total la comprend déjà. */}
+                  {LIVRAISON_PRIX > 0 && (
+                    <>
+                      <div className="flex items-center justify-between pt-4 pb-1" style={{ borderTop: `1px solid #232323` }}>
+                        <span className="text-[12px]" style={{ color: texteDoux, fontFamily: CORPS }}>Articles</span>
+                        <span className="text-[13px]" style={{ color: texte, fontFamily: CORPS }}>{euros(cartTotal(panier))}</span>
+                      </div>
+                      <div className="flex items-center justify-between pb-1">
+                        <span className="text-[12px]" style={{ color: texteDoux, fontFamily: CORPS }}>Frais d'envoi</span>
+                        {fraisLivraison(cartTotal(panier)) > 0 ? (
+                          <span className="text-[13px]" style={{ color: texte, fontFamily: CORPS }}>
+                            {euros(fraisLivraison(cartTotal(panier)))}
+                          </span>
+                        ) : (
+                          <span className="text-[13px] font-bold" style={{ color: vert, fontFamily: CORPS }}>OFFERTS</span>
+                        )}
+                      </div>
+                      {/* La phrase qui fait ajouter un article de plus. */}
+                      {resteAvantEnvoiOffert(cartTotal(panier)) > 0 && (
+                        <p className="text-[11.5px] pb-1" style={{ color: jaune, fontFamily: CORPS, lineHeight: 1.5 }}>
+                          Plus que <b>{euros(resteAvantEnvoiOffert(cartTotal(panier)))}</b> d'articles
+                          et l'envoi est <b>offert</b>.
+                        </p>
+                      )}
+                    </>
+                  )}
+
+                  <div
+                    className="flex items-center justify-between py-4"
+                    style={{ borderTop: LIVRAISON_PRIX > 0 ? "1px solid #232323" : "1px solid #232323" }}
+                  >
                     <span className="text-[12px] uppercase tracking-wider" style={{ color: texteDoux, fontFamily: CORPS }}>Total</span>
-                    <Prix valeur={cartTotal(panier)} taille={30} />
+                    <Prix valeur={totalAPayer(panier)} taille={30} />
                   </div>
 
                   {/* Les moyens de paiement se lisent AVANT d'envoyer la
                       commande : découvrir qu'on ne peut payer qu'en espèces
                       après coup, c'est une commande annulée. */}
                   <div className="mb-3">
-                    <MoyensDePaiement total={cartTotal(panier)} reference={reference} />
+                    <MoyensDePaiement total={totalAPayer(panier)} reference={reference} />
                   </div>
 
                   {/* Ce qu'il faut donner pour être livré, juste au-dessus du

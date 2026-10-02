@@ -58,6 +58,11 @@ export const BOUTIQUE = {
      republication. Vide = elles durent jusqu'à ce qu'on les retire. */
   promoFin: "2026-10-12",
 
+  /* Frais d'envoi : le prix, et le montant d'achat a partir duquel ils sont
+     offerts. Prix a zero = la boutique n'en parle pas. */
+  livraisonPrix: 12,
+  livraisonOfferteDes: 60,
+
   // Envoyer la commande dans une conversation. Mets false pour une boutique
   // qui ne fonctionne qu'au paiement en ligne.
   commandeActive: true,

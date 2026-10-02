@@ -10,7 +10,7 @@
 
 export const MOTEUR = {
   modele: "vitrine-3-niveaux",
-  version: "3.39",
+  version: "3.40",
   // Ce que sait faire cette version, pour information.
   capacites: [
     "familles > gammes > produits",
@@ -69,5 +69,7 @@ export const MOTEUR = {
     "un article epuise ne porte aucune remise, meme dans son rayon : il garde son prix normal",
     "les ecrans glissent : un rayon entre par la droite, un retour repart vers la gauche",
     "les cartes apparaissent l une apres l autre, le rayon se remplit au lieu de clignoter",
+    "frais d envoi annonces dans le panier, offerts au-dela d un montant d achat",
+    "le montant envoye au prestataire comprend les frais d envoi",
   ],
 };

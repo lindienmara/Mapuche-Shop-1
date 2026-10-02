@@ -456,6 +456,39 @@ export const CASCADE = (rang) => ({ animationDelay: `${Math.min(rang, 11) * 28}m
 
 export const euros = (n) => n.toFixed(2).replace(".", ",") + " €";
 
+/* ⚠️ LES FRAIS D'ENVOI, CALCULÉS À UN SEUL ENDROIT.
+   ─────────────────────────────────────────────────
+   Un prix d'envoi se recopie vite à trois endroits — l'affichage du panier, le
+   message de commande, le montant envoyé au prestataire — et il suffit qu'un
+   seul reste en arrière pour que le client paie 60 € et que le vendeur en
+   attende 72. Le calcul vit donc ici, et les trois s'en servent.
+
+   Prix à zéro = la boutique n'ajoute rien, et aucune ligne ne s'affiche : une
+   boutique qui livre en main propre n'a pas à parler de frais d'envoi. */
+export const LIVRAISON_PRIX = Math.max(0, Number(BOUTIQUE.livraisonPrix) || 0);
+export const LIVRAISON_OFFERTE_DES = Math.max(0, Number(BOUTIQUE.livraisonOfferteDes) || 0);
+
+// Ce que coûte l'envoi pour un panier d'articles valant « sousTotal ».
+export function fraisLivraison(sousTotal) {
+  if (!LIVRAISON_PRIX) return 0;
+  if (LIVRAISON_OFFERTE_DES > 0 && sousTotal >= LIVRAISON_OFFERTE_DES) return 0;
+  return LIVRAISON_PRIX;
+}
+
+// Ce qu'il y a VRAIMENT à régler : les articles et l'envoi.
+export function totalAPayer(items) {
+  const articles = cartTotal(items);
+  return Math.round((articles + fraisLivraison(articles)) * 100) / 100;
+}
+
+/* Ce qui manque pour que l'envoi devienne gratuit, ou 0 s'il l'est déjà.
+   C'est la phrase qui fait ajouter un article : « plus que 8 € ». */
+export function resteAvantEnvoiOffert(sousTotal) {
+  if (!LIVRAISON_PRIX || !LIVRAISON_OFFERTE_DES) return 0;
+  const reste = LIVRAISON_OFFERTE_DES - sousTotal;
+  return reste > 0 ? Math.round(reste * 100) / 100 : 0;
+}
+
 export function cartTotal(items) {
   return items.reduce((s, i) => s + i.prix * i.qty, 0);
 }
@@ -752,7 +785,14 @@ export function texteCommande(items, reference = "") {
      clavier quand la conversation s'ouvre. Plus haut, elles passeraient
      au-dessus du pli et personne ne les verrait. */
   const envoi = LIVRAISON ? `\n\n${LIVRAISON}` : "";
-  return `${BOUTIQUE.accroche}\n\n${lignes.join("\n")}\n\nTotal : ${euros(cartTotal(items))}${ref}${moyens}${envoi}`;
+  /* L'envoi est une ligne de la commande, pas une surprise à l'arrivée. Le
+     client doit lire le même total que celui qu'on lui demandera de régler. */
+  const articles = cartTotal(items);
+  const port = fraisLivraison(articles);
+  const lignePort = LIVRAISON_PRIX
+    ? `\nSous-total : ${euros(articles)}\nFrais d'envoi : ${port ? euros(port) : "offerts"}`
+    : "";
+  return `${BOUTIQUE.accroche}\n\n${lignes.join("\n")}${lignePort}\n\nTotal : ${euros(articles + port)}${ref}${moyens}${envoi}`;
 }
 
 export function lienCommande(items, reference = "") {
