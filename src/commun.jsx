@@ -624,6 +624,61 @@ export function referenceCommande() {
   return t.slice(-4);
 }
 
+/* UN BOUTON QUI COPIE, ET QUI LE DIT.
+   Sans retour visible, le client appuie, ne voit rien, et appuie encore en se
+   demandant si ça a marché. Le libellé devient « Copié ✓ » deux secondes.
+
+   « navigator.clipboard » n'existe pas partout — vieux navigateur, page non
+   sécurisée. On retombe alors sur un champ caché que l'on sélectionne, et si
+   même ça échoue, le bouton disparaît plutôt que de mentir. */
+function BoutonCopier({ valeur, libelle }) {
+  const [fait, setFait] = useState(false);
+  const [possible, setPossible] = useState(true);
+  if (!possible) return null;
+
+  const copier = () => {
+    const secours = () => {
+      try {
+        const champ = document.createElement("textarea");
+        champ.value = valeur;
+        champ.setAttribute("readonly", "");
+        champ.style.position = "fixed";
+        champ.style.opacity = "0";
+        document.body.appendChild(champ);
+        champ.select();
+        const ok = document.execCommand && document.execCommand("copy");
+        document.body.removeChild(champ);
+        return !!ok;
+      } catch (e) {
+        return false;
+      }
+    };
+    const montrer = () => { setFait(true); setTimeout(() => setFait(false), 2000); };
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(valeur).then(montrer, () => {
+        if (secours()) montrer(); else setPossible(false);
+      });
+      return;
+    }
+    if (secours()) montrer(); else setPossible(false);
+  };
+
+  return (
+    <button
+      onClick={copier}
+      className="rounded-lg px-2 py-1 active:scale-95 transition-transform flex-shrink-0"
+      style={{
+        background: fait ? vert : CARTE, border: `1px solid ${fait ? vert : bordure}`,
+        color: fait ? "#0B0B0B" : texte, fontFamily: CORPS, fontSize: 10.5, fontWeight: 700,
+        whiteSpace: "nowrap",
+      }}
+    >
+      {fait ? "Copié ✓" : libelle}
+    </button>
+  );
+}
+
 export function MoyensDePaiement({ total = 0, reference = "" }) {
   // Aucun moyen relié : le bloc entier disparaît, note comprise. Une précision
   // sur un paiement qui n'existe pas n'aurait aucun sens.
@@ -642,10 +697,24 @@ export function MoyensDePaiement({ total = 0, reference = "" }) {
           <p className="text-[11px]" style={{ color: texteDoux, fontFamily: CORPS }}>
             Montant à envoyer
           </p>
-          <p style={{ fontFamily: TITRE, fontSize: 24, color: jaune, lineHeight: 1.1 }}>{euros(total)}</p>
+          <div className="flex items-center gap-2 flex-wrap">
+            <p style={{ fontFamily: TITRE, fontSize: 24, color: jaune, lineHeight: 1.1 }}>{euros(total)}</p>
+            {/* ⚠️ PAYPAL PORTE LE MONTANT, REVOLUT NON.
+                Revolut ne publie aucun format d'adresse qui emporte la somme :
+                « revolut.me/nom/32eur » ne pré-remplit rien et renvoie même sur
+                une page d'accueil — le lien de paiement est alors perdu. Son
+                écran s'ouvre donc sur « quelle somme ? », et le client doit
+                recopier le total.
+
+                Ce bouton est ce qui s'en approche le plus : un doigt, et la
+                somme est dans le presse-papiers, prête à coller. Mieux qu'un
+                chiffre à retenir de tête en changeant d'application. */}
+            <BoutonCopier valeur={total.toFixed(2)} libelle="Copier le montant" />
+          </div>
           {reference && (
-            <p className="text-[11px] mt-1" style={{ color: texte, fontFamily: CORPS }}>
-              Indique la référence <b style={{ color: jaune }}>{reference}</b> dans le message du paiement.
+            <p className="text-[11px] mt-1 flex items-center gap-2 flex-wrap" style={{ color: texte, fontFamily: CORPS }}>
+              <span>Indique la référence <b style={{ color: jaune }}>{reference}</b> dans le message du paiement.</span>
+              <BoutonCopier valeur={reference} libelle="Copier la référence" />
             </p>
           )}
         </div>

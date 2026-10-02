@@ -772,10 +772,19 @@ export default function Boutique() {
      silencieusement le premier, et le vendeur enverrait deux fois la même
      paire. Un client qui ne choisit rien retombe sur l'ancien comportement. */
   const ajouter = (p, qte, taille = "", couleur = "") => {
+    /* LA VIGNETTE PART AVEC L'ARTICLE DANS LE PANIER.
+       Elle est calculée ICI, au moment de l'ajout, et non retrouvée plus tard
+       d'après la référence : une même référence peut resservir d'une
+       collection à l'autre, et le panier aurait affiché la photo du voisin.
+       Faute de photo, on emporte le dessin de secours — jamais un carré vide. */
+    const rayon = famille || p.famille || { couleurs: ["#FF1B8D", "#7B2FF7"], glyphe: "boite" };
+    const vignette = GALERIE(p)[0] || "";
+    const secours = SECOURS(p, rayon);
+
     const meme = (i) => i.ref === p.ref && (i.taille || "") === taille && (i.couleur || "") === couleur;
     setPanier((actuel) => {
       if (actuel.find(meme)) return actuel.map((i) => (meme(i) ? { ...i, qty: i.qty + qte } : i));
-      return [...actuel, { ref: p.ref, nom: p.nom, unite: p.unite, prix: p.prix, qty: qte, taille, couleur }];
+      return [...actuel, { ref: p.ref, nom: p.nom, unite: p.unite, prix: p.prix, qty: qte, taille, couleur, vignette, secours }];
     });
     setPanierOuvert(true);
   };
@@ -971,9 +980,24 @@ export default function Boutique() {
                   </p>
                   {panier.map((i) => (
                     <div key={i.ref} className="flex items-center gap-3 py-3" style={{ borderTop: `1px solid #232323` }}>
+                      {/* LA PHOTO DANS LE PANIER.
+                          Une liste de noms et de références ne se relit pas :
+                          « REF-001 » ne dit rien, la photo dit tout. Le client
+                          vérifie d'un regard qu'il commande le bon drapeau,
+                          avant de payer — et non en recevant le colis. */}
+                      <img
+                        src={i.vignette || i.secours}
+                        onError={(e) => { if (i.secours && e.target.src !== i.secours) e.target.src = i.secours; }}
+                        alt={i.nom}
+                        className="rounded-lg flex-shrink-0"
+                        style={{ width: 52, height: 52, objectFit: "cover", background: "#000", border: `1px solid ${bordure}` }}
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="text-[14px] font-bold leading-tight" style={{ color: texte, fontFamily: CORPS }}>{i.nom}</p>
-                        <p className="text-[11px]" style={{ color: texteDoux, fontFamily: CORPS }}>{i.unite} · réf. {i.ref}</p>
+                        <p className="text-[11px]" style={{ color: texteDoux, fontFamily: CORPS }}>
+                          {i.unite} · réf. {i.ref}
+                          {[i.taille, i.couleur].filter(Boolean).length ? ` · ${[i.taille, i.couleur].filter(Boolean).join(", ")}` : ""}
+                        </p>
                         <div className="mt-0.5"><Prix valeur={i.prix * i.qty} taille={16} /></div>
                       </div>
                       <div className="flex items-center gap-1 rounded-xl p-1 flex-shrink-0" style={{ background: VOILE(fond, "CC"), border: `1px solid ${bordure}` }}>
