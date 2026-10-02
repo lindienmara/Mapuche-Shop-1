@@ -396,8 +396,48 @@ export const ANIMATIONS = `
 @keyframes atelier-sortie {
   to { opacity: 0; visibility: hidden; }
 }
+
+/* ───────── LE PASSAGE D'UN ÉCRAN À L'AUTRE ─────────
+   On entrait dans un rayon d'un coup sec : l'écran changeait, sans que rien
+   ne dise d'où l'on venait ni qu'on était descendu d'un cran. C'est ce qui
+   fait « page web » plutôt qu'« application ».
+
+   Le rayon arrive donc depuis la droite, et le retour repart vers la gauche :
+   le geste raconte le sens de la navigation. 220 ms — assez pour se voir,
+   assez court pour ne pas agacer au dixième clic. */
+@keyframes atelier-entre-droite {
+  from { opacity: 0; transform: translate3d(22px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+@keyframes atelier-entre-gauche {
+  from { opacity: 0; transform: translate3d(-22px, 0, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+/* « clip » et non « hidden » : le décalage de 22 px ne doit pas faire
+   apparaître une barre de défilement horizontale — mais « hidden » ferait de
+   ce bloc un conteneur de défilement, et casserait les éléments collants. */
+.atelier-ecran { overflow-x: clip; }
+.atelier-glisse-avant   { animation: atelier-entre-droite .22s ease-out both; }
+.atelier-glisse-arriere { animation: atelier-entre-gauche .22s ease-out both; }
+
+/* ───────── LES CARTES, L'UNE APRÈS L'AUTRE ─────────
+   Surgir toutes ensemble donne un bloc qui clignote. Décalées de quelques
+   centièmes, elles donnent l'impression que le rayon se remplit.
+
+   Le décalage est PLAFONNÉ par celui qui l'applique : sur 83 articles, une
+   cascade intégrale durerait deux secondes et le client attendrait devant un
+   écran vide. */
+@keyframes atelier-carte {
+  from { opacity: 0; transform: translate3d(0, 10px, 0); }
+  to   { opacity: 1; transform: translate3d(0, 0, 0); }
+}
+.atelier-carte { animation: atelier-carte .26s ease-out both; }
+
 @media (prefers-reduced-motion: reduce) {
-  .atelier-anime { animation: none !important; }
+  .atelier-anime,
+  .atelier-glisse-avant,
+  .atelier-glisse-arriere,
+  .atelier-carte { animation: none !important; }
 }`;
 
 document.title = (APERCU ? "Aperçu — " : "") + BOUTIQUE.nom;
@@ -407,6 +447,12 @@ if (telegram) {
   telegram.ready();
   telegram.expand();
 }
+
+/* Le retard d'une carte dans la cascade, d'après son rang.
+   Plafonné au douzième : au-delà, l'écran est de toute façon rempli et plus
+   personne ne regarde les suivantes — mais sans plafond, le 83ᵉ article d'un
+   rayon n'apparaîtrait qu'après deux secondes et demie d'écran vide. */
+export const CASCADE = (rang) => ({ animationDelay: `${Math.min(rang, 11) * 28}ms` });
 
 export const euros = (n) => n.toFixed(2).replace(".", ",") + " €";
 

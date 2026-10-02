@@ -11,7 +11,7 @@ import React, { useState, useMemo } from "react";
 import { Search, PlayCircle, Star, X } from "lucide-react";
 import { visuelProduit } from "./visuels.js";
 import {
-  BOUTIQUE, FAMILLES, TOUS_PRODUITS, PRODUITS_EN_PROMOTION, EST_VIDEOS, SECOURS, GALERIE, AJUSTEMENT,
+  BOUTIQUE, FAMILLES, TOUS_PRODUITS, PRODUITS_EN_PROMOTION, CASCADE, EST_VIDEOS, SECOURS, GALERIE, AJUSTEMENT,
   STYLE_PHOTO, Vedettes, RemonterEnHaut, ToutesLesFamilles, Photo, Prix, Etiquette, VOILE, CARTE, COLONNE, DEGRADE,
   TITRE, CORPS, euros, fond, fondCarte, bordure, texte, texteDoux, rose, violet,
   vert, jaune, cyan,
@@ -123,12 +123,12 @@ export function EcranListe({ onProduit, onFamille }) {
         </p>
       ) : (
         <div className="grid grid-cols-2 gap-3 px-3 mt-3">
-          {produits.map((p) => (
+          {produits.map((p, rang) => (
             <button
               key={p.cle || p.ref}
               onClick={() => onProduit(p.famille, p.gamme, p)}
-              className="relative rounded-xl overflow-hidden text-left active:scale-[0.97] transition-transform"
-              style={{ background: CARTE, border: `2px solid ${p.famille.couleurs[0]}` }}
+              className="relative rounded-xl overflow-hidden text-left active:scale-[0.97] transition-transform atelier-carte"
+              style={{ background: CARTE, border: `2px solid ${p.famille.couleurs[0]}`, ...CASCADE(rang) }}
             >
               <div className="relative">
                 <Photo

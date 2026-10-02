@@ -20,7 +20,7 @@ import { visuelFamille, visuelProduit } from "./visuels.js";
 import {
   FONTS, APERCU, BOUTIQUE, COULEURS, FAMILLES, EST_VIDEOS, GALERIE,
   TOUS_PRODUITS, SELECTION_CHEF, VEDETTES, SECOURS, PRESENTATION, AJUSTEMENT,
-  CLE, PROPORTION_PHOTO, STYLE_PHOTO, FOND_IMAGE, COLONNE, CARTE, VOILE, FOND_PAGE,
+  CLE, PROPORTION_PHOTO, STYLE_PHOTO, FOND_IMAGE, COLONNE, CARTE, VOILE, FOND_PAGE, CASCADE,
   DEGRADE, TITRE, CORPS, INTRO, ANIMATIONS, telegram, euros, MESSAGERIES,
   MESSAGERIE, CONTACT, Photo, Video, Etiquette, Prix, BarreSection, Vedettes, RemonterEnHaut, MoyensDePaiement, BlocLivraison, referenceCommande, PEUT_COMMANDER,
   AVIS, Carrousel, CHOIX, ChoixEtCommande, CadreVideo,
@@ -127,12 +127,12 @@ function EcranProduits({ famille, gamme, onProduit, onRetour }) {
       <RemonterEnHaut articles={produits.length} />
 
       <div className="grid grid-cols-2 gap-3 px-3 mt-4">
-        {produits.map((p) => (
+        {produits.map((p, rang) => (
           <button
             key={p.cle || p.ref}
             onClick={() => onProduit(famille, p.gamme, p)}
-            className="relative rounded-xl overflow-hidden text-left active:scale-[0.97] transition-transform"
-            style={{ background: CARTE, border: `2px solid ${violet}` }}
+            className="relative rounded-xl overflow-hidden text-left active:scale-[0.97] transition-transform atelier-carte"
+            style={{ background: CARTE, border: `2px solid ${violet}`, ...CASCADE(rang) }}
           >
             <div className="relative">
               <Photo
@@ -746,6 +746,25 @@ export default function Boutique() {
 
   const nbArticles = panier.reduce((s, i) => s + i.qty, 0);
 
+  /* DANS QUEL SENS VA-T-ON ?
+     ────────────────────────
+     Un écran qui arrive depuis la droite veut dire « je descends d'un cran » ;
+     depuis la gauche, « je reviens ». Encore faut-il savoir lequel des deux,
+     et React ne le dit pas : il ne connaît que l'état d'arrivée.
+
+     On mesure donc la PROFONDEUR — accueil 0, rayon 1, fiche produit 2 — et on
+     la compare à celle du rendu précédent. Le changement d'onglet du bas, lui,
+     n'est pas une descente : il entre toujours par la droite. */
+  const profondeur = produit ? 2 : famille ? 1 : 0;
+  const profondeurAvant = useRef(profondeur);
+  const sens = profondeur < profondeurAvant.current ? "arriere" : "avant";
+  useEffect(() => { profondeurAvant.current = profondeur; }, [profondeur]);
+
+  /* La clé change quand l'écran change : c'est ce qui fait rejouer l'animation
+     — sans elle, React garderait le même bloc et rien ne bougerait. */
+  const cleEcran = [onglet, famille && famille.id, gamme && gamme.id, produit && produit.ref]
+    .filter(Boolean).join("/");
+
 /* Deux pointures du même modèle sont DEUX lignes de commande, pas une.
      C'est pourquoi l'article est reconnu par sa référence ET par la taille et
      la couleur choisies : sans cela, commander un 42 après un 40 remplacerait
@@ -869,7 +888,7 @@ export default function Boutique() {
           </div>
         </div>
 
-        <div className="pb-28">
+        <div className={`pb-28 atelier-ecran atelier-glisse-${sens}`} key={cleEcran}>
           {onglet === "info" && <EcranInfo />}
           {onglet === "liens" && <EcranLiens />}
           {onglet === "avis" && <EcranAvis />}

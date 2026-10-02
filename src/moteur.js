@@ -10,7 +10,7 @@
 
 export const MOTEUR = {
   modele: "vitrine-3-niveaux",
-  version: "3.38",
+  version: "3.39",
   // Ce que sait faire cette version, pour information.
   capacites: [
     "familles > gammes > produits",
@@ -67,5 +67,7 @@ export const MOTEUR = {
     "en presentation liste, une pastille 44 EN PROMOTION filtre les articles remises",
     "un article epuise ne figure pas dans les promotions : on n y promet rien qu on ne peut vendre",
     "un article epuise ne porte aucune remise, meme dans son rayon : il garde son prix normal",
+    "les ecrans glissent : un rayon entre par la droite, un retour repart vers la gauche",
+    "les cartes apparaissent l une apres l autre, le rayon se remplit au lieu de clignoter",
   ],
 };

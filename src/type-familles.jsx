@@ -13,7 +13,7 @@ import React from "react";
 import { Star, PlayCircle } from "lucide-react";
 import { visuelFamille } from "./visuels.js";
 import {
-  BOUTIQUE, FAMILLES_AFFICHEES, SELECTION_CHEF, EST_VIDEOS, EN_RUPTURE, Vedettes, Prix,
+  BOUTIQUE, FAMILLES_AFFICHEES, SELECTION_CHEF, CASCADE, EST_VIDEOS, EN_RUPTURE, Vedettes, Prix,
   VOILE, CARTE, TITRE, CORPS, bordure, texte, texteDoux, jaune, cyan,
 } from "./commun.jsx";
 
@@ -55,12 +55,12 @@ export function EcranFamilles({ onFamille, onProduit }) {
             )}
 
       <div className="flex flex-col gap-4 px-3 mt-4">
-        {FAMILLES_AFFICHEES.map((f) => (
+        {FAMILLES_AFFICHEES.map((f, rang) => (
               <button
                 key={f.id}
                 onClick={() => onFamille(f)}
-                className="relative rounded-2xl overflow-hidden active:scale-[0.98] transition-transform"
-                style={{ border: `2px solid ${f.couleurs[0]}`, boxShadow: `0 0 24px ${f.couleurs[0]}33` }}
+                className="relative rounded-2xl overflow-hidden active:scale-[0.98] transition-transform atelier-carte"
+                style={{ border: `2px solid ${f.couleurs[0]}`, boxShadow: `0 0 24px ${f.couleurs[0]}33`, ...CASCADE(rang) }}
               >
                 <img src={visuelFamille(f)} alt={f.nom} className="w-full aspect-[760/340] object-cover block" />
                 <span className="absolute top-2 right-2 text-[22px]">{f.emoji}</span>
