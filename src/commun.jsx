@@ -120,6 +120,23 @@ const EN_PROMOTION = (famille) => (PROMOTIONS_TERMINEES ? famille : {
   gammes: (famille.gammes || []).map((gamme) => ({
     ...gamme,
     produits: (gamme.produits || []).map((produit) => {
+      /* ⚠️ AUCUNE REMISE SUR UN ARTICLE ÉPUISÉ, NULLE PART.
+         ────────────────────────────────────────────────────
+         Pas même dans son propre rayon, où il reste pourtant affiché pour
+         annoncer son retour. Un « 20,00 € barré, 10,00 €, −50 % » sur une
+         pièce qu'on ne peut pas commander, c'est une promesse en l'air : le
+         client la lit, veut l'acheter, et découvre ÉPUISÉ. Il garde donc son
+         prix normal, sans prix barré ni pastille.
+
+         Cela vaut aussi quand la remise vient de la GAMME ou de la FAMILLE
+         entière : une remise posée sur tout un rayon saute les pièces
+         épuisées de ce rayon, une par une.
+
+         Et rien n'est perdu : le calcul se refait à chaque visite. Le jour où
+         tu remets l'article en vente — même au milieu de la promotion — il
+         retrouve sa remise tout seul, sans que tu aies à la reposer. */
+      if (produit.dispo === false) return produit;
+
       const taux = REMISE(produit.remise) || REMISE(gamme.remise) || REMISE(famille.remise);
       if (!taux) return produit;
 
